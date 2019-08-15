@@ -1,0 +1,40 @@
+{% extends "../_base.html" %}
+{% block content %}
+
+<h2>Account Settings</h2>
+
+{# <p>
+    Profile Picture:
+    {% if current_user.pic_url %}
+        <img src="{{current_user.pic_url}}" alt="Profile Pic" />
+        <form method="post" action="">
+            {% raw xsrf_form_html() %}
+            <input type="hidden" name="delete" value="1" />
+            <input type="submit" value="Delete" />
+        </form>
+    {% else %}
+        None
+    {% end %}
+</p>
+
+<p>
+    <form method="post" action="/user" enctype="multipart/form-data" class="upload-form">
+        {% raw xsrf_form_html() %}
+        <input type="file" name="profile_pic" />
+        <input type="submit" value="Upload New" />
+    </form>
+    {% if errors.get('type') %}
+        <span class="error">That file type is not supported. Please select an image file.</span>
+    {% end %}
+    {% if errors.get('corrupt') %}
+        <span class="error">That file has been corrupted. Please select another image file.</span>
+    {% end %}
+</p> #}
+
+<ul>
+    <li><a href="/user/auths">Active Sessions</a></li>
+    <li><a href="/user/email">Change Email</a></li>
+    <li><a href="/user/password">Change Password</a></li>
+</ul>
+
+{% end %}

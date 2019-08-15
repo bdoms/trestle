@@ -1,0 +1,189 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+
+    <title>Site Name</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="{{static('i/favicon.png')}}" />
+    <link rel="apple-touch-icon-precomposed" href="{{static('i/favicon-152.png')}}">
+
+    <link rel="stylesheet" type="text/css" href="{{static('c/main.css')}}">
+</head>
+<body>
+
+<div id="app">
+    <header>
+        <h1>Site Name</h1>
+    </header>
+
+    <nav>
+        <ul>
+            <li><router-link to="/vue/home">Home</router-link></li>
+            <li><router-link to="/vue/user">Account Settings</router-link></li>
+            <li>
+                <a href="#" v-on:click.prevent="$root.logOut">Log Out</a>
+                <form id="logout-form" method="post" action="/user/logout">
+                    {% raw xsrf_form_html() %}
+                </form>
+            </li>
+        </ul>
+    </nav>
+
+    <p v-if="loading">Loading...</p>
+
+    <router-view></router-view>
+</div>
+
+
+<script type="text/x-template" id="home-template"><div>
+
+<h2>Home</h2>
+
+<p v-if="current_user">You're logged in as {{!current_user.email}}</p>
+
+</div></script>
+
+
+<script type="text/x-template" id="user-template"><div>
+
+<h2>Account Settings</h2>
+
+<ul>
+    <li><a href="/vue/user/auths">Active Sessions</a></li>
+    <li><a href="/vue/user/email">Change Email</a></li>
+    <li><a href="/vue/user/password">Change Password</a></li>
+</ul>
+
+</div></script>
+
+
+<script type="text/x-template" id="auths-template"><div>
+
+<h2>Active Sessions</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Device</th>
+            <th>IP Address</th>
+            <th>Last Login</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr v-for="(auth, index) in auths">
+            <td>
+                <span v-if="auth.device || auth.os || auth.browser">
+                    <span v-if="auth.device">
+                        {{! auth.device }}
+                    </span>
+                    <span v-else>
+                        {{! auth.os }}
+                    </span>
+                    {{! auth.browser }}
+                </span>
+                <span v-else>
+                    {{! auth.user_agent }}
+                </span>
+            </td>
+            <td>{{! auth.ip }}</td>
+            <td>
+                <time :datetime="auth.modified_dt">
+                    {{! auth.modified_dt }}
+                </time>
+            </td>
+            <td>
+                <div v-if="auth.slug == current_auth_id">
+                    Current Session
+                </div>
+                <div v-else>
+                    <form action="/user/auths" method="post" v-on:submit.prevent="revokeAccess($event, index)">
+                        <input type="hidden" name="_xsrf"/>
+                        <input type="hidden" name="auth_key" :value="auth.slug" />
+    
+                        <input type="submit" value="Revoke Access" />
+                    </form>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+</div></script>
+
+
+<script type="text/x-template" id="email-template"><div>
+
+<h2>Change Email</h2>
+
+<form action="/user/email" method="post" v-on:submit.prevent="changeEmail">
+    <input type="hidden" name="_xsrf"/>
+
+    <p v-if="errors.match" class="error">Invalid current password. Please try again.</p>
+    <p v-if="errors.exists" class="error">That email address is already in use.</p>
+
+    <p>
+        <label for="password">Current Password</label>
+        <input type="password" name="password" id="password" required autofocus />
+        <span v-if="errors.password" class="error">Please enter a valid password.</span>
+    </p>
+
+    <p>
+        <label for="email">Email</label>
+        <input type="email" name="email" id="email" required :value="current_user ? current_user.email : ''"/>
+        <span v-if="errors.email" class="error">Please enter a valid email.</span>
+        <span v-if="ok" class="success">Saved</span>
+    </p>
+
+    <p><input type="submit" value="Change Email" /></p>
+</form>
+
+</div></script>
+
+
+<script type="text/x-template" id="password-template"><div>
+
+<h2>Change Password</h2>
+
+<form action="/user/password" method="post" v-on:submit.prevent="changePassword">
+    <input type="hidden" name="_xsrf"/>
+
+    <p v-if="errors.match" class="error">Invalid current password. Please try again.</p>
+
+    <p>
+        <label for="password">Current Password</label>
+        <input type="password" name="password" id="password" required autofocus />
+        <span v-if="errors.password" class="error">Please enter a valid password.</span>
+    </p>
+
+    <p>
+        <label for="new-password">New Password</label>
+        <input type="password" name="new_password" id="new-password" required />
+        <span v-if="errors.new_password" class="error">Please enter a valid password.</span>
+        <span v-if="ok" class="success">Saved</span>
+    </p>
+
+    <input type="submit" value="Change Password" />
+</form>
+
+</div></script>
+
+
+<input id="xsrf" type="hidden" value="{{xsrf}}"/>
+
+{% if debug %}
+    <script src="/static/j/lib/vue-2.5.22.js"></script>
+    <script src="/static/j/lib/vue-router-3.0.2.min.js"></script>
+{% else %}
+    {# replace with links to your preferred CDN #}
+    <script src="/static/j/lib/vue-2.5.22.min.js"></script>
+    <script src="/static/j/lib/vue-router-3.0.2.min.js"></script>
+{% end %}
+
+<script src="{{static('j/main.js')}}"></script>
+<script src="{{static('j/vue.js')}}"></script>
+
+</body>
+</html>

@@ -1,0 +1,54 @@
+{% extends "_base.html" %}
+{% block content %}
+
+<h2>Dev</h2>
+
+<h3>Actions</h3>
+
+<form action="" method="post">
+    {% raw xsrf_form_html() %}
+    <input type="hidden" name="clear_cache" value="1"/>
+    <p>
+        <input type="submit" value="Clear Cache"/>
+    </p>
+</form>
+
+<form action="" method="post">
+    {% raw xsrf_form_html() %}
+    <input type="hidden" name="make_admin" value="1"/>
+
+    {% if errors.get('exists') %}
+        <p class="error">There is no user associated with that email address.</p>
+    {% end %}
+
+    <p>
+        <label for="email">Email</label>
+        <input type="email" name="email" id="email" required value="{{form.get('email', '')}}"/>
+        <input type="submit" value="Make User an Admin"/>
+        {% if errors.get('email') %}
+            <span class="error">Please enter a valid email.</span>
+        {% end %}
+    </p>
+</form>
+
+<form action="" method="post">
+    {% raw xsrf_form_html() %}
+    <input type="hidden" name="migrate" value="1"/>
+    <p>
+        <input type="submit" value="Run Migrations"/>
+    </p>
+</form>
+
+{% if debug %}
+    <h3>Development Only</h3>
+
+    <form action="" method="post">
+        {% raw xsrf_form_html() %}
+        <input type="hidden" name="reset" value="1"/>
+        <p>
+            <input type="submit" value="Reset Data"/>
+        </p>
+    </form>
+{% end %}
+
+{% end %}

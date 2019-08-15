@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+
+    {# SEO: titles should be 70 characters or less #}
+    <title>
+        {% if page_title %}
+            {{page_title}} |
+        {% end %}
+        Site Name
+    </title>
+
+    {# SEO: meta descriptions should be 155 characters or less #}
+    {% if page_title %}
+        <meta name="description" content="{{page_title}} | Site Name."/>
+        <meta name="author" content="Site Author"/>
+    {% else %}
+        <meta name="description" content="Site Name"/>
+        <meta name="author" content="Site Author"/>
+    {% end %}
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="{{static('i/favicon.png')}}" />
+    <link rel="apple-touch-icon-precomposed" href="{{static('i/favicon-152.png')}}">
+
+    <link rel="stylesheet" type="text/css" href="{{static('c/main.css')}}">
+</head>
+<body>
+    <header>
+        <h1><a href="/">Site Name</a></h1>
+    </header>
+
+    <nav>
+        <ul>
+            {% if current_user %}
+                {% if is_dev %}
+                    <li><a href="/dev">Dev</a></li>
+                {% end %}
+                {% if is_admin %}
+                    <li><a href="/admin">Admin</a></li>
+                {% end %}
+                <li><a href="/home">Home</a></li>
+                <li><a href="/user">Account Settings</a></li>
+                <li>
+                    <a id="logout-link" href="#">Log Out</a>
+                    <form id="logout-form" method="post" action="/user/logout">
+                        {% raw xsrf_form_html() %}
+                    </form>
+                </li>
+            {% else %}
+                <li><a href="/user/signup">Sign Up</a></li>
+                <li><a href="/user/login">Log In</a></li>
+            {% end %}
+        </ul>
+    </nav>
+
+    <section>
+        {% if flash %}
+            <div class="flash {{flash['level']}}">
+                <p>{{flash['message']}}</p>
+            </div>
+        {% end %}
+        {% block content %}{% end %}
+    </section>
+
+    <footer>
+        <ul>
+            <li><a href="/terms">Terms of Service</a></li>
+            <li><a href="/privacy">Privacy Policy</a></li>
+        </ul>
+    </footer>
+
+    <script src="{{static('j/main.js')}}"></script>
+
+    {% if not debug %}
+        {#
+            include third-party scripts for tracking or advertising here
+            be sure to modify the CSP header in `controllers/_base.py` if you add from a new source
+        #}
+    {% end %}
+</body>
+</html>

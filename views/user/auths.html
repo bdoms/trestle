@@ -1,0 +1,53 @@
+{% extends "../_base.html" %}
+{% block content %}
+
+<h2>Active Sessions</h2>
+
+<table>
+<thead>
+    <tr>
+        <th>Device</th>
+        <th>IP Address</th>
+        <th>Last Login</th>
+        <th>Actions</th>
+    </tr>
+</thead>
+<tbody>
+{% for auth in auths %}
+    <tr>
+        <td>
+            {% if auth.device or auth.os or auth.browser %}
+                {% if auth.device %}
+                    {{ auth.device }}
+                {% else %}
+                    {{ auth.os }}
+                {% end %}
+                {{ auth.browser }}
+            {% else %}
+                {{ auth.user_agent }}
+            {% end %}
+        </td>
+        <td>{{ auth.ip }}</td>
+        <td>
+            <time datetime="{{ auth.modified_dt.isoformat() }}">
+                {{ auth.modified_dt.isoformat() }}
+            </time>
+        </td>
+        <td>
+            {% if auth.slug == current_auth_key %}
+                Current Session
+            {% else %}
+                <form action="" method="post">
+                    {% raw xsrf_form_html() %}
+                    <input type="hidden" name="auth_key" value="{{ auth.slug }}" />
+
+                    <input type="submit" value="Revoke Access" />
+                </form>
+            {% end %}
+        </td>
+    </tr>
+{% end %}
+</tbody>
+</table>
+
+{% end %}

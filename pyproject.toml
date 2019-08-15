@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "trestle"
+version = "0.1.0"
+description = "A modern Python and Tornado based jumping off point for building web apps with Vue or Svelte."
+
+license = "MIT"
+
+authors = ["Brendan Doms <b@bdoms.com>"]
+
+readme = "README.md"
+
+repository = "https://github.com/bdoms/trestle"
+homepage = "https://github.com/bdoms/trestle"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+gae_validators = "1.0.1"
+htmlmin = "0.1.12"
+httpagentparser = "1.8.2"
+peewee = "3.9.3"
+psycopg2 = "2.8.2"
+sendgrid = "6.0.5"
+tornado = "6.0.2"
+
+[tool.poetry.dev-dependencies]
+flake8 = "3.7.7"

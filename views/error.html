@@ -1,0 +1,10 @@
+{% extends "_base.html" %}
+{% block content %}
+
+<h2>{{page_title}}</h2>
+
+{% if stacktrace %}
+    <pre>{{stacktrace}}</pre>
+{% end %}
+
+{% end %}

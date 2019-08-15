@@ -1,0 +1,42 @@
+{
+  "name": "trestle",
+  "license": "MIT",
+  "private": false,
+  "author": "Brendan Doms <b@bdoms.com> (https://www.bdoms.com)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bdoms/trestle.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bdoms/trestle/issues"
+  },
+  "homepage": "https://github.com/bdoms/trestle",
+  "scripts": {
+    "start": "parcel svelte/app.js",
+    "build": "parcel build --no-source-maps --log-level 1 --out-dir static/j --out-file svelte.js svelte/app.js",
+    "test": "ava --verbose"
+  },
+  "comment": "for browserslist see https://github.com/DeMoorJasper/parcel-plugin-svelte/issues/44",
+  "browserslist": [
+    "last 1 chrome versions"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "ava": "2.2.0",
+    "browser-env": "3.2.6",
+    "esm": "3.2.25",
+    "page": "1.11.4",
+    "parcel-bundler": "1.12.3",
+    "parcel-plugin-svelte": "4.0.1",
+    "svelte": "3.7.1"
+  },
+  "ava": {
+    "files": [
+      "svelte/tests/**"
+    ],
+    "require": [
+      "./svelte/tests/_browser_env.js",
+      "esm"
+    ]
+  }
+}
