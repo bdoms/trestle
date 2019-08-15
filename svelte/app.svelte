@@ -27,6 +27,7 @@
 <script>
     import {onMount} from 'svelte';
     import page from 'page';
+    import utils from './utils';
 
     let current_user = {};
     let loading = true;
@@ -35,7 +36,7 @@
 
     onMount(async function() {
         // this is only triggered on the first page load - but loadPage is triggered once below BEFORE this
-        trestle.ajax('POST', '/home', {}, function(data) {
+        utils.ajax('POST', '/home', {}, function(data) {
             current_user = data.user;
             loading = false;
         });
@@ -48,7 +49,7 @@
             form.setAttribute('disabled', true);
 
             // make sure to clear these before redirecting away from the page
-            form._xsrf.value = trestle.XSRF;
+            form._xsrf.value = utils.XSRF;
             form.submit();
         }
     };

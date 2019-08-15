@@ -36,6 +36,7 @@ Clone the repository:
 
 ```bash
 git clone git@github.com:bdoms/trestle.git
+```
 
 If you don't want to retain the history as part of your project I recommend this one line squash:
 
@@ -47,7 +48,11 @@ git reset $(git commit-tree HEAD^{tree} -m "Initial commit.")
 
 ```bash
 poetry install
+```
 
+#### Svelte Dependencies
+
+```bash
 yarn install
 ```
 
@@ -107,6 +112,7 @@ You'll need to remove the views.
 rm views/user/auths.html
 rm views/user/email.html
 rm views/user/index.html
+rm views/user/password.html
 ```
 
 #### Remove Svelte
@@ -114,6 +120,7 @@ rm views/user/index.html
 Simply remove the `svelte` folder and the JS package files.
 
 ```bash
+rm views/svelte.html
 rm -rf svelte
 rm package.json
 rm yarn.lock

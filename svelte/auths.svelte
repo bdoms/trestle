@@ -62,7 +62,7 @@
     let current_auth_id = '';
 
     onMount(async function() {
-        trestle.ajax('GET', '/user/auths?app=1', {}, function(data) {
+        utils.ajax('GET', '/user/auths?app=1', {}, function(data) {
             auths = data.auths;
             current_auth_id = data.current_auth_id;
         });
@@ -71,7 +71,7 @@
     let revokeAccess = function(e, index) {
         var form = e.target;
         var form_data = utils.getFormData(form);
-        trestle.ajax('POST', form.action + '?app=1', form_data, function(data) {
+        utils.ajax('POST', form.action + '?app=1', form_data, function(data) {
             if (data.ok) {
                 auths.splice(index, 1);
                 auths = auths; // force reactivity

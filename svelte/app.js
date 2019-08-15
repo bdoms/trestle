@@ -5,9 +5,6 @@ import Auths from './auths';
 import Email from './email';
 import Password from './password';
 
-// this only exists as a separate element on app pages
-trestle.XSRF =  document.getElementById('xsrf').value;
-
 const routes = {
 	'/svelte/home': Home,
 	'/svelte/user': User,

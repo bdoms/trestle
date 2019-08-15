@@ -1,6 +1,50 @@
 import test from 'ava';
 import utils from '../utils';
-import trestle from '../../static/j/main.js';
+
+test('ajax', t => {
+    // mock the part that actually tries sending data
+    var headers = {'X-Xsrf-Token': 'abcd1234', 'Content-Type': 'application/json'};
+    XMLHttpRequest.prototype.getResponseHeader = function(key) {
+        return headers[key];
+    };
+
+    XMLHttpRequest.prototype.send = function(data) {
+        Object.defineProperty(this, 'readyState', {
+            writable: true
+        });
+
+        Object.defineProperty(this, 'status', {
+            writable: true
+        });
+
+        Object.defineProperty(this, 'responseText', {
+            writable: true
+        });
+
+        this.responseHeaders = headers;
+        this.readyState = 4;
+        this.status = 200;
+        this.responseText = data; // echo back what's put in
+        this.onreadystatechange();
+    };
+
+    var called_with = {};
+    var callback = function(data) {
+        called_with = data;
+    }
+
+    // test JSON version
+    var data = {'foo': 'bar'};
+    var s = JSON.stringify(data);
+    utils.ajax('POST', 'localhost', s, callback);
+    t.deepEqual(data, called_with);
+
+    // test that we get back what we expect, plus the XSRF token
+    headers = {'Content-Type': ''};
+    utils.ajax('GET', 'www.example.com', data, callback);
+    // this gets form encoded, and it's returned exactly that way to us
+    t.deepEqual('foo=bar&_xsrf=abcd1234', called_with);
+});
 
 test('formatDateTime', t => {
     var s = '2000-01-01T13:00:52.961652';
@@ -26,7 +70,7 @@ test('submitForm', t => {
     var called = 0;
 
     // mock ajax
-    trestle.ajax = function(method, url, data, callback) {
+    utils.ajax = function(method, url, data, callback) {
         called += 1;
     };
 
@@ -46,7 +90,7 @@ test('submitForm', t => {
         success = success_data;
     };
 
-    trestle.ajax = function(method, url, data, callback) {
+    utils.ajax = function(method, url, data, callback) {
         callback({'errors': {'foo': 'bar'}});
     };
 
@@ -55,7 +99,7 @@ test('submitForm', t => {
     t.deepEqual(success, {});
 
     // test that the callback gets called for success
-    trestle.ajax = function(method, url, data, callback) {
+    utils.ajax = function(method, url, data, callback) {
         callback({'foo': 'bar'});
     };
 
