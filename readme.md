@@ -1,4 +1,11 @@
+Copyright &copy; 2019, [Brendan Doms](https://www.bdoms.com/)  
+Licensed under the [MIT license](http://www.opensource.org/licenses/MIT)
+
 # Trestle
+
+An jumping off point for building modern web apps.
+
+Uses Python 3, Tornado, and Peewee on the back end, with Vue, Svelte, or no JaaScript on the front end.
 
 ## Setup
 
@@ -8,11 +15,11 @@ Install [Poetry](https://poetry.eustace.io/docs/#installation).
 
 ### Optional
 
-You don't have to use a front-end framework with Trestle.
+You don't have to use a front end framework with Trestle.
 The basic app can do everything it needs to server-side.
 
 If you do want to go make something more JS heavy, then there are two main options described below.
-You can always choose neither and roll your own, using Trestle as only the backend.
+You can always choose neither and roll your own, using Trestle as only the back end.
 
 #### Svelte
 
@@ -38,7 +45,7 @@ Clone the repository:
 git clone git@github.com:bdoms/trestle.git
 ```
 
-If you don't want to retain the history as part of your project I recommend this one line squash:
+If you don't want to retain the history as part of your project then we recommend this one line squash:
 
 ```bash
 git reset $(git commit-tree HEAD^{tree} -m "Initial commit.")
@@ -165,7 +172,7 @@ rm static/j/vue.js
 
 #### Run Local Development Server
 
-Backend:
+Back end:
 
 ```bash
 poetry shell
@@ -174,7 +181,7 @@ python main.py
 
 ##### If Using Svelte
 
-You also need to run another command for the frontend in another terminal:
+You also need to run another command for the front end in another terminal:
 
 ```bash
 yarn start
@@ -206,14 +213,117 @@ yarn test
 
 Learn about front end testing options with [Ava](https://github.com/avajs/ava/blob/master/docs/06-configuration.md).
 
-#### Deploy to Production
+## Deploy to Production
 
-##### Deploy with Svelte
+### First Deploy Setup
 
-Build first:
+Highly recommend you run something like [this harden script](https://github.com/bdoms/harden) to secure a new server.
+
+There are some additional packages to install and configure in production:
 
 ```bash
+sudo apt install nginx supervisor
+```
+
+#### Supervisor
+
+Create user for supervisor - this is so we don't have to run as root:
+
+```bash
+sudo adduser --system --no-create-home --disabled-login --disabled-password --group supervisor
+```
+
+Make directories for the app:
+
+```bash
+sudo -u supervisor mkdir -p /srv/web
+```
+
+Create a sym link to the config.
+
+```bash
+sudo ln -s /srv/web/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+```
+
+Start the supervisor daemon:
+
+```bash
+sudo service supervisor restart
+```
+
+#### Nginx
+
+Create nginx user (nginx will fail to start without this):
+
+```bash
+sudo adduser --system --no-create-home --disabled-login --disabled-password --group nginx
+```
+
+Create symbolic links to conf files:
+
+```bash
+sudo mv /etc/nginx/nginx.conf /etc/nginx/nginx.old
+sudo ln -s /srv/web/nginx.conf /etc/nginx/nginx.conf
+```
+
+Start the nginx server:
+
+```bash
+sudo service nginx restart
+```
+
+### Each Deploy
+
+Copy the source code from the local machine (note that the trailing slash matters here).
+Note that this method does not include package files.
+
+You *could* include the `node_modules` and Python packages here if you want to.
+However, that could increase transfer size and time significantly, so we choose not to.
+The better alternative is to create limited access user for your repo and have them clone it.
+For example, GitLab enables this with [deploy tokens](https://docs.gitlab.com/ee/user/project/deploy_tokens/).
+
+```bash
+rsync -avzhe ssh --progress --delete --exclude={.cache,.git,dist,node_modules,tests,__pycache__,*.pyc} trestle/ YOUR_USERNAME@IP_ADDRESS_OR_HOST:/srv/web
+```
+
+A deploy script is available to run all the relevant commands to build and restart the app at once.
+Run it with:
+
+```bash
+./deploy.sh
+```
+
+Note that this is purposefully run without `sudo`, but you will be prompted to authenticate.
+
+Logs are in `/var/log/supervisor/`.
+
+#### Deploy with Svelte
+
+Be sure to uncomment these two lines in `deploy.sh` if you're using Svelte, so the app gets synced and rebuilt:
+
+```bash
+yarn install
 yarn build
 ```
 
 You can fine tune builds with lots of options from [Parcel](https://parceljs.org/cli.html).
+
+### Backup
+
+Replace the defaults below with whatever you specified for your database connection above.
+
+```bash
+pg_dump -W -U trestle_user -F t trestle > trestle.tar
+```
+
+Transfer:
+
+```bash
+scp trestle.tar YOUR_USERNAME@IP_ADDRESS_OR_HOST:/srv/web/
+```
+
+And restore:
+
+```bash
+pg_restore -d trestle -U trestle_user trestle.tar
+```
