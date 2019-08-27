@@ -15,13 +15,13 @@
     </ul>
 </nav>
 
-<div id="main">
+<main>
     {#if loading}
         <p>Loading...</p>
     {/if}
 
     <svelte:component this={cmp} current_user={current_user}/>
-</div>
+</main>
 
 
 <script>
@@ -44,9 +44,9 @@
 
     let logOut = function() {
         var form = document.getElementById('logout-form');
-        if (!form.getAttribute('disabled')) {
+        if (!form.disabled) {
             // prevent multiple submits
-            form.setAttribute('disabled', true);
+            form.disabled = true;
 
             // make sure to clear these before redirecting away from the page
             form._xsrf.value = utils.XSRF;

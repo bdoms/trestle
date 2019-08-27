@@ -55,14 +55,14 @@
         </ul>
     </nav>
 
-    <section>
+    <main>
         {% if flash %}
             <div class="flash {{flash['level']}}">
                 <p>{{flash['message']}}</p>
             </div>
         {% end %}
         {% block content %}{% end %}
-    </section>
+    </main>
 
     <footer>
         <ul>

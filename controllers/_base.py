@@ -36,8 +36,11 @@ class BaseController(web.RequestHandler):
             # NOTE that self.path_args and self.path_kwargs are set as part of execute, so they aren't available here
             #      shouldn't be too much of a problem because any before method can inspect the entire request
             try:
-                self.before()
-            except Exception:
+                self.before(*self.path_args, **self.path_kwargs)
+            except Exception as e:
+                if not isinstance(e, web.Finish):
+                    # if this isn't closing the request then the finish code is never called, so we do it here as well
+                    model.peewee_db.close()
                 raise
 
         # don't run the regular action if there's already an error or redirect
@@ -50,8 +53,7 @@ class BaseController(web.RequestHandler):
         # NOTE that cookies set here aren't returned in the response, so they won't be set
         # this should be used for server-side cleanup only - assume that the response cannot be modified at this point
         # sadly attempts to do so won't throw any errors, and the browser won't see the changes (silent failure)
-        if not model.peewee_db.is_closed():
-            model.peewee_db.close()
+        model.peewee_db.close()
 
     def saveSession(self):
         # this needs to be called anywhere we're finishing the response (rendering, redirecting, etc.)
@@ -219,7 +221,7 @@ class BaseController(web.RequestHandler):
         TaskConsumer.TASKQ.put_nowait(params)
 
     # FUTURE: look at schema for this https://github.com/keleshev/schema
-    def validate(self):
+    def validate(self, fields=None):
         form_data = {} # all the original request data, for potentially re-displaying
         errors = {} # only fields with errors
         valid_data = {} # only valid fields
@@ -232,7 +234,10 @@ class BaseController(web.RequestHandler):
                 self.set_status(400)
                 return {}, {'request': 'bad data'}, {}
 
-        for name, validator in self.FIELDS.items():
+        if not fields:
+            fields = self.FIELDS
+
+        for name, validator in fields.items():
             if data:
                 form_data[name] = data.get(name, None)
             else:

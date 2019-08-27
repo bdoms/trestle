@@ -1,43 +1,77 @@
 var trestle = trestle || {};
 
+trestle.joinParams = function(params) {
+    var query = [];
+    for (var key in params) {
+        if (params.hasOwnProperty(key)) {
+            var value = params[key];
+            if (typeof value === typeof true) {
+                // booleans are treated a little bit differently
+                value = value ? '1' : '';
+            }
+            query.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
+        }
+    }
+    return query.join('&');
+};
+
 trestle.ajax = function(method, url, data, callback) {
     // compatible with IE7+, Firefox, Chrome, Opera, Safari
     var request = new XMLHttpRequest();
 
     request.onreadystatechange = function() {
-        if (request.readyState == 4 && request.status == 200) {
-            var xsrf = request.getResponseHeader('X-Xsrf-Token');
-            if (typeof(xsrf) === typeof('') && xsrf.length > 0) {
-                trestle.XSRF = xsrf;
-            }
+        if (request.readyState == 4) {
+            if (request.status == 200) {
+                var xsrf = request.getResponseHeader('X-Xsrf-Token');
+                if (typeof(xsrf) === typeof('') && xsrf.length > 0) {
+                    trestle.XSRF = xsrf;
+                }
 
-            if (callback != null) {
+                if (callback != null) {
+                    if (request.getResponseHeader('Content-Type').indexOf('application/json') === 0) {
+                        callback(JSON.parse(request.responseText));
+                    }
+                    else {
+                        callback(request.responseText);
+                    }
+                }
+            }
+            else if (error_callback) {
                 if (request.getResponseHeader('Content-Type').indexOf('application/json') === 0) {
-                    callback(JSON.parse(request.responseText));
+                    error_callback(request.status, JSON.parse(request.responseText));
                 }
                 else {
-                    callback(request.responseText);
+                    error_callback(request.status, request.responseText);
                 }
             }
         }
     };
 
-    request.open(method, url, true);
+    request.open(method, url);
     if (data != null) {
-        request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-
-        if (trestle.XSRF) {
-            data._xsrf = trestle.XSRF;
-        }
-
-        var query = [];
-        for (var key in data) {
-            if (data.hasOwnProperty(key)) {
-                query.push(encodeURIComponent(key) + '=' + encodeURIComponent(data[key]));
+        if (typeof data === typeof '') {
+            // assume JSON if string
+            request.setRequestHeader('Content-Type', 'application/json');
+            if (trestle.XSRF) {
+                request.setRequestHeader('X-Xsrf-Token', trestle.XSRF);
             }
         }
+        else if (data instanceof FormData) {
+            if (trestle.XSRF) {
+                data.append('_xsrf', trestle.XSRF);
+            }
+        }
+        else {
+            request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 
-        request.send(query.join('&'));
+            if (trestle.XSRF) {
+                data._xsrf = trestle.XSRF;
+            }
+
+            data = trestle.joinParams(data);
+        }
+
+        request.send(data);
     }
     else {
         request.send();

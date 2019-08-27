@@ -16,7 +16,7 @@ def lint():
     print('Running linter...')
     app = application.Application()
     app.run([
-        '--exclude=.git,__pycache__,env,lib,static,views',
+        '--exclude=.git,__pycache__,node_modules,static,svelte,views',
         '--ignore=E128,E261,W503',
         '--max-line-length=120',
         '.',

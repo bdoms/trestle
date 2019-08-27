@@ -8,6 +8,10 @@ class TestHelpers(BaseTestCase):
         import helpers
         self.helpers = helpers
 
+    def tearDown(self):
+        super(TestHelpers, self).tearDown()
+        self.helpers.clear_cache()
+
     def test_natural_list(self):
         result = self.helpers.natural_list([])
         assert result == ""

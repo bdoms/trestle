@@ -87,7 +87,7 @@ CREATE USER trestle_user WITH PASSWORD 'trestle_password';
 GRANT ALL PRIVILEGES ON DATABASE trestle TO trestle_user;
 ```
 
-Now modify the connection data at the top of `model.py` to reflect your local configuration.
+Now modify the connection data in `config/constants.py` to reflect your local configuration.
 
 Once that's done, build the tables for the first time by running the models file as a script:
 

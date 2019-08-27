@@ -167,6 +167,10 @@ class TestBase(BaseMockController):
 
     def test_prepare(self):
 
+        # these get set by tornado and we depend on them, so add in some blank fixtures here
+        self.controller.path_args = []
+        self.controller.path_kwargs = {}
+
         def before():
             self.called = True
 
