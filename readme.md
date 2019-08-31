@@ -1,9 +1,9 @@
+# Trestle
+
 Copyright &copy; 2019, [Brendan Doms](https://www.bdoms.com/)  
 Licensed under the [MIT license](http://www.opensource.org/licenses/MIT)
 
-# Trestle
-
-An jumping off point for building modern web apps.
+A jumping off point for building modern web apps.
 
 Uses Python 3, Tornado, and Peewee on the back end, with Vue, Svelte, or no JaaScript on the front end.
 
@@ -176,7 +176,7 @@ Back end:
 
 ```bash
 poetry shell
-python main.py
+python main.py --debug=1
 ```
 
 ##### If Using Svelte
@@ -296,6 +296,12 @@ Run it with:
 Note that this is purposefully run without `sudo`, but you will be prompted to authenticate.
 
 Logs are in `/var/log/supervisor/`.
+
+You only need to restart nginx if its config has changed. Run this to pick up the changes:
+
+```bash
+sudo service nginx restart
+```
 
 #### Deploy with Svelte
 

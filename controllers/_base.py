@@ -8,6 +8,7 @@ import logging
 # library imports
 from gae_validators import validateRequiredInt
 from tornado import escape, web
+from peewee import OperationalError
 
 # local imports
 import helpers
@@ -21,7 +22,7 @@ class BaseController(web.RequestHandler):
     # a mapping of field names to their validator functions
     FIELDS = {}
 
-    def prepare(self):
+    def prepareSession(self):
         # get a session store for this request
         session = self.get_secure_cookie('session')
         if session:
@@ -29,8 +30,17 @@ class BaseController(web.RequestHandler):
         else:
             self.session = {}
 
+    def prepare(self):
+        self.prepareSession()
+
         # do this before `before` so that that method can use the db
-        model.peewee_db.connect()
+        try:
+            model.peewee_db.connect()
+        except OperationalError:
+            # this should not generally happen, but it is possible
+            # extreme example: the process gets killed mid request, so it doesn't have a chance to cleanup
+            # logging.warning('Database connection already open')
+            pass
 
         if hasattr(self, "before"):
             # NOTE that self.path_args and self.path_kwargs are set as part of execute, so they aren't available here
@@ -172,11 +182,17 @@ class BaseController(web.RequestHandler):
             stacktrace = ''.join(traceback.format_exception(*exc_info))
             message = exc_info[0].__name__
 
+        # this can be called before the request is even prepared (e.g. by @web.authenticated)
+        # in which case the session won't exist yet, but we expect it to when we render things
+        if not hasattr(self, 'session'):
+            self.prepareSession()
+
         self.renderError(status_code, stacktrace=stacktrace)
 
-        # send an email notifying about this error
-        self.deferEmail([SUPPORT_EMAIL], "Error Alert", "error_alert.html", message=message,
-            user=self.current_user, url=self.request.full_url(), method=self.request.method)
+        # send an email notifying about this error if it's in the 500 range
+        if status_code > 499:
+            self.deferEmail([SUPPORT_EMAIL], "Error Alert", "error_alert.html", message=message,
+                user=self.current_user, url=self.request.full_url(), method=self.request.method)
 
     # this is called automatically to set the current_user property
     def get_current_user(self):

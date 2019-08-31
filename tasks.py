@@ -84,12 +84,15 @@ class EmailTask(Task):
             message.reply_to = sgmail.Email(reply_to)
 
         if not debug:
-            # an error here logs the status code but not the message
-            # which is way more helpful, so we get it manually
-            try:
-                cls.SENDGRID.client.mail.send.post(request_body=message.get())
-            except urllib.error.HTTPError as e:
-                cls.LOGGER.error(e.read())
+            if SENDGRID_API_KEY:
+                # an error here logs the status code but not the message
+                # which is way more helpful, so we get it manually
+                try:
+                    cls.SENDGRID.client.mail.send.post(request_body=message.get())
+                except urllib.error.HTTPError as e:
+                    cls.LOGGER.error(e.read())
+            else:
+                cls.LOGGER.info('Have email to send but no SendGrid API key exists.')
         else:
             kwargs = {
                 'sender': SENDER_EMAIL,

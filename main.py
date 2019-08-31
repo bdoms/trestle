@@ -5,6 +5,7 @@ import os
 from tornado import web
 from tornado.ioloop import IOLoop
 from tornado.log import enable_pretty_logging
+from tornado.options import define, options
 
 from config import constants
 from cron import Cron
@@ -76,23 +77,26 @@ def makeApp(debug=False, autoreload=False, level=logging.INFO):
 
 # see https://www.tornadoweb.org/en/stable/guide/running.html
 if __name__ == "__main__":
-    debug = True
-    port = 8888
+    define('debug', default=False, help='enable debug')
+    define('port', default=8888, help='port for the web server to listen on')
+
+    options.parse_command_line()
 
     # FUTURE: this should probably be run in a separate process, especially in production
-    IOLoop.current().add_callback(TaskConsumer.consumer, debug=debug)
+    IOLoop.current().add_callback(TaskConsumer.consumer, debug=options.debug)
 
     # FUTURE: this should probably also be in a separate process
-    IOLoop.current().add_callback(Cron.setup, debug=debug)
+    IOLoop.current().add_callback(Cron.setup, debug=options.debug)
 
-    if debug:
+    if options.debug:
         app = makeApp(debug=True, autoreload=True, level=logging.DEBUG)
     else:
         app = makeApp()
 
-    app.listen(port)
+    app.listen(options.port)
 
     application_log = logging.getLogger('tornado.access')
-    application_log.info('Server running at http://localhost:' + str(port))
+    application_log.info('Debug is ' + str(options.debug))
+    application_log.info('Server running at http://localhost:' + str(options.port))
 
     IOLoop.current().start()

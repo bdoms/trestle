@@ -7,7 +7,7 @@ license = "MIT"
 
 authors = ["Brendan Doms <b@bdoms.com>"]
 
-readme = "README.md"
+readme = "readme.md"
 
 repository = "https://github.com/bdoms/trestle"
 homepage = "https://github.com/bdoms/trestle"
