@@ -14,13 +14,13 @@ homepage = "https://github.com/bdoms/trestle"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-gae_validators = "1.0.1"
+gae_validators = "1.0.3"
 htmlmin = "0.1.12"
-httpagentparser = "1.8.4"
-peewee = "3.10.0"
-psycopg2 = "2.8.3"
-sendgrid = "6.0.5"
-tornado = "6.0.3"
+httpagentparser = "1.9.0"
+peewee = "3.13.1"
+psycopg2 = "2.8.4"
+sendgrid = "6.2.0"
+tornado = "6.0.4"
 
 [tool.poetry.dev-dependencies]
-flake8 = "3.7.8"
+flake8 = "3.7.9"
