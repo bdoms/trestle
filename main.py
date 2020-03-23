@@ -53,8 +53,17 @@ handlers = [
 ]
 
 
+class webApp(web.Application):
+
+    # this overrides tornado's logging so we can customize it
+    def log_request(self, handler):
+        # they're logging is pretty good - just want to a add a line about user agent
+        logging.info(handler.request.headers.get('user-agent'))
+        super(webApp, self).log_request(handler)
+
+
 # FUTURE: add this once Tornady implements it: xsrf_cookie_kwargs={'samesite': 'strict'}
-def makeApp(debug=False, autoreload=False, level=logging.INFO):
+def makeApp(domain=None, debug=False, autoreload=False, level=logging.INFO):
     # logging setup
     access_log = logging.getLogger('tornado.access')
     access_log.setLevel(level)
@@ -71,14 +80,24 @@ def makeApp(debug=False, autoreload=False, level=logging.INFO):
     views_path = os.path.join(app_path, 'views')
     static_path = os.path.join(app_path, 'static')
 
-    return web.Application(handlers=handlers, template_path=views_path, debug=debug, autoreload=autoreload,
-        static_path=static_path, cookie_secret=constants.SESSION_KEY, xsrf_cookies=True, login_url='/user/login')
+    if not domain:
+        domain = constants.HOST
+
+    return webApp(handlers=handlers, template_path=views_path, debug=debug, autoreload=autoreload,
+        compress_response=True,
+        static_path=static_path, static_handler_class=static.StaticFileController,
+        cookie_secret=constants.SESSION_KEY, xsrf_cookies=True,
+        xsrf_cookie_kwargs={'domain': domain, 'httponly': True, 'secure': not debug}, login_url='/user/login')
 
 
 # see https://www.tornadoweb.org/en/stable/guide/running.html
 if __name__ == "__main__":
     define('debug', default=False, help='enable debug')
-    define('port', default=8888, help='port for the web server to listen on')
+    define('port', default=8888, help='port to listen on')
+    define('address', default=constants.HOST, help='address to listen on')
+
+    # NOTE that for cookies to work correctly with other computers connecting over the LAN
+    # the address should be set to the LAN IP, e.g. 192.168... or 10.0...., NOT localhost or 0.0.0.0
 
     options.parse_command_line()
 
@@ -89,14 +108,15 @@ if __name__ == "__main__":
     IOLoop.current().add_callback(Cron.setup, debug=options.debug)
 
     if options.debug:
-        app = makeApp(debug=True, autoreload=True, level=logging.DEBUG)
+        app = makeApp(domain=options.address, debug=True, autoreload=True, level=logging.DEBUG)
     else:
         app = makeApp()
 
-    app.listen(options.port)
+    # xheaders enables forwarded headers from nginx
+    app.listen(options.port, address=options.address, xheaders=True)
 
     application_log = logging.getLogger('tornado.access')
     application_log.info('Debug is ' + str(options.debug))
-    application_log.info('Server running at http://localhost:' + str(options.port))
+    application_log.info('Server running at http://' + options.address + ':' + str(options.port))
 
     IOLoop.current().start()

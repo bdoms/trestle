@@ -28,14 +28,15 @@ class BaseTestController(BaseTestCase, AsyncHTTPTestCase):
         self.controller_base = controller_base
 
     def fetch(self, *args, **kwargs):
+        assert ' ' not in args[0], 'Unescaped space in URL'
+
         # having to manually open and close a db connection when writing tests would be a pain
         # but the controllers manage their own connection and they're called from the same process
         # so we go through the trouble of overwriting this method to manage the connection automatically
+        model.peewee_db.close()
 
         # network_interface gets passed through and eventually mapped directly to remote_ip on the request object
         # but there are also some fallback headers that would achieve the same thing, e.g. X-Forwarded-For
-        model.peewee_db.close()
-
         headers = kwargs.pop('headers', HEADERS.copy())
         if hasattr(self, 'cookies'):
             headers['Cookie'] = '; '.join([key + '=' + value for key, value in self.cookies.items()])
@@ -152,6 +153,7 @@ class BaseMockController(BaseTestController):
     def mockSessions(self):
         # this is used by tests that want to bypass needing to perform session-dependent actions within a request
         self.controller.session = {}
+        self.controller.orig_session = {}
 
     def mockLogin(self):
         self.auth = self.createAuth(self.user)
@@ -506,13 +508,14 @@ class TestDecorators(BaseMockController):
         decorator = self.controller_base.validateReferer(action)
 
         # with a valid referer the action should complete
-        self.controller.request.headers = {"referer": "http://valid", "host": "valid"}
+        self.controller.request.host = 'valid'
+        self.controller.request.headers = {"referer": "http://valid"}
         response = decorator(self.controller)
         assert response == "action"
         assert self.controller.get_status() != 400
 
         # without a valid referer the request should not go through
-        self.controller.request.headers = {"referer": "invalid", "host": "valid"}
+        self.controller.request.headers = {"referer": "http://invalid"}
         response = decorator(self.controller)
         assert response != "action"
         assert self.controller.get_status() == 400

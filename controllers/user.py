@@ -4,7 +4,7 @@ from gae_validators import validateRequiredString, validateRequiredEmail, valida
 import httpagentparser
 from tornado import web
 
-from config.constants import AUTH_EXPIRES_DAYS
+from config.constants import AUTH_EXPIRES_DAYS, HOST
 from controllers._base import BaseController, withoutUser
 import model
 import helpers
@@ -43,8 +43,8 @@ class BaseLoginController(BaseController):
             auth.save()
 
         expires_days = remember and AUTH_EXPIRES_DAYS or None
-        self.set_secure_cookie('auth_key', auth.slug, expires_days=expires_days, httponly=True,
-            secure=not self.debug)
+        self.set_secure_cookie('auth_key', auth.slug, expires_days=expires_days, domain=HOST,
+            httponly=True, secure=not self.debug)
 
         self.redirect("/home")
 
@@ -304,12 +304,12 @@ class LoginController(BaseLoginController):
 class LogoutController(BaseController):
 
     @web.authenticated
-    def post(self):
+    async def post(self):
         slug = self.get_secure_cookie('auth_key').decode()
         model.Auth.delete().where(model.Auth.id == slug).execute()
         helpers.uncache(slug)
 
-        self.clear_all_cookies()
+        self.clear_all_cookies(domain=self.host)
         self.redirect("/")
 
 

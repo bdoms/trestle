@@ -13,7 +13,7 @@ from peewee import OperationalError
 # local imports
 import helpers
 import model
-from config.constants import AUTH_EXPIRES_DAYS, SUPPORT_EMAIL
+from config.constants import AUTH_EXPIRES_DAYS, HOST, SUPPORT_EMAIL
 from tasks import TaskConsumer, EmailTask
 
 
@@ -29,8 +29,9 @@ class BaseController(web.RequestHandler):
             self.session = json.loads(session)
         else:
             self.session = {}
+        self.orig_session = dict(self.session)
 
-    def prepare(self):
+    async def prepare(self):
         self.prepareSession()
 
         # do this before `before` so that that method can use the db
@@ -67,10 +68,9 @@ class BaseController(web.RequestHandler):
 
     def saveSession(self):
         # this needs to be called anywhere we're finishing the response (rendering, redirecting, etc.)
-        # FUTURE: optimize slightly by only doing this if the session has been modified
-        #         tried something simply like `if self.session != self.orig_session:` and the cookie was never set
-        self.set_secure_cookie('session', json.dumps(self.session), expires_days=AUTH_EXPIRES_DAYS,
-            httponly=True, secure=not self.debug)
+        if self.session != self.orig_session:
+            self.set_secure_cookie('session', json.dumps(self.session), expires_days=AUTH_EXPIRES_DAYS,
+                domain=self.host, httponly=True, secure=not self.debug)
 
     @property
     def logger(self):
@@ -83,6 +83,10 @@ class BaseController(web.RequestHandler):
     @property
     def debug(self):
         return self.settings.get('debug')
+
+    @property
+    def host(self):
+        return self.debug and self.request.host.split(':', 1)[0] or HOST
 
     def flash(self, message, level='info'):
         self.session["flash"] = {"level": level, "message": message}
@@ -105,6 +109,12 @@ class BaseController(web.RequestHandler):
 
         return self.render_string(filename, **kwargs)
 
+    def set_default_headers(self):
+        # set any headers that should be present with all request types
+        self.set_header('X-Content-Type-Options', 'nosniff')
+        self.set_header('X-Frame-Options', 'deny') # deprecated in favor of CSP, but better safe than sorry
+        self.set_header('X-XSS-Protection', '1')
+
     def securityHeaders(self):
         # uncomment to enable HSTS - note that it can have permanent consequences for your domain
         # self.set_header('Strict-Transport-Security', 'max-age=86400; includeSubDomains')
@@ -116,9 +126,9 @@ class BaseController(web.RequestHandler):
         if self.debug:
             # unsafe-eval is needed here for Vue - to remove it you need to compile
             # svelte uses parcel JS, which serves locally on port 1234
-            CSP += "script-src 'self' 'unsafe-eval' localhost:1234; "
+            CSP += "script-src 'self' 'unsafe-eval' " + self.host + ":1234; "
             # parcel HMR uses random ports for a web socket connection
-            CSP += "connect-src http://localhost:* ws://localhost:*; "
+            CSP += "connect-src http://" + self.host + ":* ws://" + self.host + ":*; "
             CSP += "style-src 'self' 'unsafe-inline'; " # needed for inline svelte styles
 
         CSP += "base-uri 'none'; frame-ancestors 'none'; object-src 'none';"
@@ -212,7 +222,11 @@ class BaseController(web.RequestHandler):
                     self.flash('You have been logged out.')
 
             if not user:
-                self.clear_cookie('auth_key')
+                self.clear_cookie('auth_key', domain=self.host)
+                if self.request.path.startswith('/data/'):
+                    self.renderJSONError(401)
+                    raise web.Finish
+
         return user
 
     def deferEmail(self, to, subject, filename, reply_to=None, attachments=None, **kwargs):
@@ -292,7 +306,7 @@ def validateReferer(action):
     def decorate(*args, **kwargs):
         controller = args[0]
         referer = controller.request.headers.get("referer")
-        if not referer or not referer.startswith("http://" + controller.request.headers.get("host")):
+        if not referer or not referer.startswith(controller.base_url):
             return controller.renderError(400)
         return action(*args, **kwargs)
     return decorate
