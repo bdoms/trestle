@@ -149,6 +149,7 @@ rm static/j/vue.js
 ### Mandatory Modifications
 
 * Replace values for environment variables in `config/constants.py`
+* Replace values for environment variables in `supervisord.conf`
 * In both cases:
   - Replace `SENDER_EMAIL` with the email address that emails should come from
   - Replace `SUPPORT_EMAIL` with the email address where you would like to receive support-related messages, such as error alerts
