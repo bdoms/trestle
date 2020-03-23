@@ -52,7 +52,7 @@ class BaseLoginController(BaseController):
 class IndexController(BaseController):
 
     @web.authenticated
-    def get(self):
+    async def get(self):
 
         self.renderTemplate('user/index.html')
 
@@ -91,7 +91,7 @@ class AuthsController(BaseController):
     FIELDS = {'auth_key': validateRequiredString}
 
     @web.authenticated
-    def get(self):
+    async def get(self):
 
         auths = self.current_user.auths
         current_auth_key = self.get_secure_cookie('auth_key').decode()
@@ -102,7 +102,7 @@ class AuthsController(BaseController):
         self.renderTemplate('user/auths.html', auths=auths, current_auth_key=current_auth_key)
 
     @web.authenticated
-    def post(self):
+    async def post(self):
 
         app = self.get_argument('app', None)
         form_data, errors, valid_data = self.validate()
@@ -136,12 +136,12 @@ class EmailController(BaseController):
     FIELDS = {"email": validateRequiredEmail, "password": validateRequiredString}
 
     @web.authenticated
-    def get(self):
+    async def get(self):
 
         self.renderTemplate('user/email.html')
 
     @web.authenticated
-    def post(self):
+    async def post(self):
 
         app = self.get_argument('app', None)
         form_data, errors, valid_data = self.validate()
@@ -186,12 +186,12 @@ class PasswordController(BaseController):
     FIELDS = {"password": validateRequiredString, "new_password": validateRequiredString}
 
     @web.authenticated
-    def get(self):
+    async def get(self):
 
         self.renderTemplate('user/password.html')
 
     @web.authenticated
-    def post(self):
+    async def post(self):
 
         app = self.get_argument('app', None)
         form_data, errors, valid_data = self.validate()
@@ -236,12 +236,12 @@ class SignupController(BaseLoginController):
     }
 
     @withoutUser
-    def get(self):
+    async def get(self):
 
         self.renderTemplate('user/signup.html')
 
     @withoutUser
-    def post(self):
+    async def post(self):
 
         form_data, errors, valid_data = self.validate()
 
@@ -271,12 +271,12 @@ class LoginController(BaseLoginController):
     FIELDS = {"email": validateRequiredEmail, "password": validateRequiredString, "remember": validateBool}
 
     @withoutUser
-    def get(self):
+    async def get(self):
 
         self.renderTemplate('user/login.html')
 
     @withoutUser
-    def post(self):
+    async def post(self):
 
         form_data, errors, valid_data = self.validate()
 
@@ -318,12 +318,12 @@ class ForgotPasswordController(BaseController):
     FIELDS = {"email": validateRequiredEmail}
 
     @withoutUser
-    def get(self):
+    async def get(self):
 
         self.renderTemplate('user/forgot_password.html')
 
     @withoutUser
-    def post(self):
+    async def post(self):
 
         form_data, errors, valid_data = self.validate()
 
@@ -368,11 +368,11 @@ class ResetPasswordController(BaseLoginController):
             self.flash("That reset password link has expired.", level="error")
             self.redirect("/user/forgotpassword")
 
-    def get(self):
+    async def get(self):
 
         self.renderTemplate('user/reset_password.html', key=self.key, token=self.token)
 
-    def post(self):
+    async def post(self):
 
         form_data, errors, valid_data = self.validate()
 

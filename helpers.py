@@ -98,7 +98,7 @@ def int_comma(i):
 def cacheAndRender(skip_check=None, content_type=None):
 
     def wrap_action(action):
-        def decorate(*args, **kwargs):
+        async def decorate(*args, **kwargs):
             controller = args[0]
 
             # if we're checking for errors and they're present, then return early to avoid caching
@@ -114,7 +114,7 @@ def cacheAndRender(skip_check=None, content_type=None):
                     controller.set_header('Content-Type', content_type)
                 controller.write(html)
             else:
-                action(*args, **kwargs)
+                await action(*args, **kwargs)
                 html = b"".join(controller._write_buffer).decode()
 
                 html = htmlmin.minify(html, remove_comments=True, remove_empty_space=True)
@@ -127,6 +127,9 @@ def cacheAndRender(skip_check=None, content_type=None):
 
 
 def cache(key, function):
+    # make the key memcache compatible
+    key = key.replace(' ', '_')[:250]
+
     # simple in memory LRU cache, most recently used key is moved to the end, least is at front
     if key in CACHE:
         # move the key to the end since it was just used
@@ -139,12 +142,17 @@ def cache(key, function):
         del CACHE[remove_key]
 
     value = function()
-    CACHE_KEYS.append(key)
-    CACHE[key] = value
+    if key not in CACHE:
+        CACHE[key] = value
+        CACHE_KEYS.append(key)
+
     return value
 
 
 def uncache(key):
+    # make the key memcache compatible
+    key = key.replace(' ', '_')[:250]
+
     if key in CACHE:
         del CACHE[key]
         CACHE_KEYS.remove(key)

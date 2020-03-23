@@ -7,7 +7,8 @@ from tornado.httputil import HTTPServerRequest
 from tornado.testing import AsyncHTTPTestCase
 from tornado import web
 
-from _base import BaseTestCase, UCHAR # _base import MUST come before model import to set up test DB properly
+# _base import MUST come before model import to set up test DB properly
+from _base import async_test, BaseTestCase, UCHAR
 from controllers import _base as controller_base
 import model
 
@@ -167,7 +168,8 @@ class TestBase(BaseMockController):
 
         self.controller = self.controller_base.BaseController(self._app, self.getMockRequest())
 
-    def test_prepare(self):
+    @async_test
+    async def test_prepare(self):
 
         # these get set by tornado and we depend on them, so add in some blank fixtures here
         self.controller.path_args = []
@@ -181,24 +183,25 @@ class TestBase(BaseMockController):
         # before should be called if it exists
         self.called = False
         model.peewee_db.close()
-        self.controller.prepare()
+        await self.controller.prepare()
         assert self.called
 
         # if there is an error or redirect in before then the request should be finished
         model.peewee_db.close()
         self.controller.set_status(500)
         try:
-            self.controller.prepare()
+            await self.controller.prepare()
         except web.Finish:
             pass
         else:
             assert False
 
-    def test_saveSession(self):
+    @async_test
+    async def test_saveSession(self):
 
         # sessions can only be used during a request, so we prepare for one
         model.peewee_db.close()
-        self.controller.prepare()
+        await self.controller.prepare()
 
         def set_secure_cookie(name, data, **kwargs):
             self.name = name
@@ -279,7 +282,8 @@ class TestBase(BaseMockController):
         assert self.controller._headers['Content-Type'] == "application/json"
         assert not self.controller._write_buffer
 
-    def test_head(self):
+    @async_test
+    async def test_head(self):
 
         def get():
             self.called = True
@@ -288,15 +292,16 @@ class TestBase(BaseMockController):
 
         # HEAD should just call the GET version
         self.called = False
-        self.controller.head()
+        await self.controller.head()
         assert self.called
 
         # but not have a response body
         assert not self.controller._write_buffer
 
-    def test_redirect(self):
+    @async_test
+    async def test_redirect(self):
         model.peewee_db.close()
-        self.controller.prepare()
+        await self.controller.prepare()
         self.controller._transforms = [] # normally done in execute, so we have to do it manually
 
         self.controller.redirect('/test-redirect-url')
@@ -304,9 +309,10 @@ class TestBase(BaseMockController):
         assert self.controller.get_status() == 302
         assert "Location: /test-redirect-url" in str(self.controller._headers)
 
-    def test_redisplay(self):
+    @async_test
+    async def test_redisplay(self):
         model.peewee_db.close()
-        self.controller.prepare()
+        await self.controller.prepare()
         self.controller._transforms = [] # normally done in execute, so we have to do it manually
 
         self.controller.redisplay("form_data", "errors", "/test-redirect-url")
@@ -449,11 +455,12 @@ class TestDecorators(BaseMockController):
 
         self.controller = self.controller_base.BaseController(self._app, self.getMockRequest())
 
-    def test_withoutUser(self):
+    @async_test
+    async def test_withoutUser(self):
         self.mockSessions()
         self.createUser()
         model.peewee_db.close()
-        self.controller.prepare()
+        await self.controller.prepare()
         self.controller._transforms = [] # normally done in execute, so we have to do it manually
 
         def action(x):
@@ -474,9 +481,10 @@ class TestDecorators(BaseMockController):
         assert self.controller.get_status() == 302
         assert "Location: /home" in str(self.controller._headers)
 
-    def test_removeSlash(self):
+    @async_test
+    async def test_removeSlash(self):
         model.peewee_db.close()
-        self.controller.prepare()
+        await self.controller.prepare()
         self.controller._transforms = [] # normally done in execute, so we have to do it manually
 
         def action(x):
@@ -497,10 +505,11 @@ class TestDecorators(BaseMockController):
         assert self.controller.get_status() == 301
         assert "Location: /with-slash" in str(self.controller._headers)
 
-    def test_validateReferer(self):
+    @async_test
+    async def test_validateReferer(self):
         self.mockSessions()
         model.peewee_db.close()
-        self.controller.prepare()
+        await self.controller.prepare()
 
         def action(x):
             return 'action'

@@ -6,6 +6,6 @@ class IndexController(BaseController):
     """ handles request for the main index page of the site """
 
     @helpers.cacheAndRender()
-    def get(self):
+    async def get(self):
 
         self.renderTemplate('index.html')

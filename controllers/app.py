@@ -6,14 +6,14 @@ from tornado import web
 class SvelteController(BaseController):
 
     @web.authenticated
-    def get(self):
+    async def get(self):
 
-        self.renderTemplate('svelte.html')
+        self.renderTemplate('svelte.html', host=self.host)
 
 
 class VueController(BaseController):
 
     @web.authenticated
-    def get(self):
+    async def get(self):
 
         self.renderTemplate('vue.html')

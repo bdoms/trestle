@@ -14,10 +14,10 @@ class DevController(BaseController):
         if (not self.current_user or not self.current_user.is_dev) and not self.debug:
             return self.renderError(403)
 
-    def get(self):
+    async def get(self):
         self.renderTemplate('dev.html')
 
-    def post(self):
+    async def post(self):
 
         if self.get_argument('clear_cache', None):
             helpers.clear_cache()
@@ -64,7 +64,7 @@ class DevController(BaseController):
             user.save()
 
             # auto signout since the IDs and keys have all changed
-            self.clear_all_cookies()
+            self.clear_all_cookies(domain=self.host)
             helpers.clear_cache()
             self.flash('Data Reset')
 

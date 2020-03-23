@@ -11,6 +11,6 @@ class AdminController(BaseController):
         if not self.current_user.is_admin:
             return self.renderError(403)
 
-    def get(self):
+    async def get(self):
 
         self.renderTemplate('admin/index.html')

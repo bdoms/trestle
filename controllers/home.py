@@ -6,11 +6,11 @@ from controllers._base import BaseController
 class HomeController(BaseController):
 
     @web.authenticated
-    def get(self):
+    async def get(self):
 
         self.renderTemplate('home.html')
 
     @web.authenticated
-    def post(self):
+    async def post(self):
 
         self.renderJSON({'user': self.current_user.toDict()})

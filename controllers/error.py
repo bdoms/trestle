@@ -7,7 +7,7 @@ class ErrorController(BaseController):
     """ handles any page that falls through the rest of config.ROUTES """
 
     @helpers.cacheAndRender()
-    def get(self, *args):
+    async def get(self, *args):
 
         self.renderError(404)
 
@@ -19,7 +19,7 @@ class LogErrorController(BaseController):
     def check_xsrf_cookie(self):
         pass
 
-    def post(self):
+    async def post(self):
         reason = self.get_argument('javascript', '')
         exception = JavascriptError(reason)
 
@@ -39,7 +39,7 @@ class PolicyViolationController(BaseController):
     def check_xsrf_cookie(self):
         pass
 
-    def post(self):
+    async def post(self):
         exception = PolicyViolationError(self.request.body.decode('utf8'))
 
         self.logger.error(exception.message)

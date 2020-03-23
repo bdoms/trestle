@@ -156,7 +156,7 @@ class BaseController(web.RequestHandler):
             self.write(data)
             self.saveSession()
 
-    def head(self, *args):
+    async def head(self, *args):
         # support HEAD requests in a generic way
         if hasattr(self, 'get'):
             self.get(*args)
