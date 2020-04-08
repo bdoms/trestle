@@ -103,6 +103,21 @@ CREATE USER trestle_test WITH PASSWORD 'trestle_test';
 GRANT ALL PRIVILEGES ON DATABASE trestle_test TO trestle_test;
 ```
 
+### Memcache
+
+Trestle uses a builtin memory LRU cache by default. However you can easily enable memcache support.
+This is not required, but it is highly recommended in production.
+First, get memcached installed:
+
+```bash
+sudo apt install memcached
+```
+
+Then uncomment the appropriate line in `pyproject.toml` and run `poetry install` again.
+
+Finally, modify the top of `helpers.py` by commenting and uncommenting the appropriate lines.
+Also, make sure your connection host and port are correct!
+
 ### Cleanup
 
 Whatever you go with for javascript - no front end, Svelte, or Vue -
@@ -224,6 +239,14 @@ There are some additional packages to install and configure in production:
 
 ```bash
 sudo apt install nginx supervisor
+```
+
+#### Memcache
+
+If you want to enable memcache support, remember to isntall it in production:
+
+```bash
+sudo apt install memcached
 ```
 
 #### Supervisor

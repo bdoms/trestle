@@ -19,8 +19,11 @@ htmlmin = "0.1.12"
 httpagentparser = "1.9.0"
 peewee = "3.13.1"
 psycopg2 = "2.8.4"
+# uncomment to enable memcache support:
+# python-memcached = "1.59"
 sendgrid = "6.2.0"
 tornado = "6.0.4"
 
 [tool.poetry.dev-dependencies]
 flake8 = "3.7.9"
+flake8-print = "3.1.4"

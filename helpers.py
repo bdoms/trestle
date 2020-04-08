@@ -3,6 +3,14 @@ from urllib.parse import quote_plus
 
 import htmlmin
 
+# uncomment if you want to enable memcache
+# note that server_max_value_length has to also be set in memcache config to work properly
+# default max value is 1 MB, see https://stackoverflow.com/a/18182563
+# import memcache
+# MCACHE = memcache.Client(['localhost', '11211']) # , server_max_value_length=1024 * 1024 * 10) # 10 MB
+
+# comment out or remove at least the first line (or all of this block) to enabled memcache
+MCACHE = None
 CACHE = {}
 CACHE_KEYS = []
 CACHE_MAX_SIZE = 128 # number of unique entries
@@ -129,25 +137,36 @@ def cacheAndRender(skip_check=None, content_type=None):
     return wrap_action
 
 
-def cache(key, function, debug=False):
+def cache(key, function, expires=0, debug=False):
     # make the key memcache compatible
     key = key.replace(' ', '_')[:250]
 
-    # simple in memory LRU cache, most recently used key is moved to the end, least is at front
-    if key in CACHE:
-        # move the key to the end since it was just used
-        # (this method avoids a temporary state with the key not existing that might not be threadsafe)
-        CACHE_KEYS.sort(key=key.__eq__)
-        return CACHE[key]
+    if MCACHE:
+        value = CACHE.get(key)
+        if value is None:
+            value = function()
+            if not debug:
+                # NOTE: min_compress_len is an argument that can be sent here to compress the value
+                #       could be useful to save memory but unclear how it effects performance
+                CACHE.set(key, value, time=expires, noreply=True)
+    else:
+        assert not expires, 'Setting an expires time is only compatible with memcache, not the LRU'
 
-    while len(CACHE_KEYS) >= CACHE_MAX_SIZE:
-        remove_key = CACHE_KEYS.pop(0)
-        del CACHE[remove_key]
+        # simple in memory LRU cache, most recently used key is moved to the end, least is at front
+        if key in CACHE:
+            # move the key to the end since it was just used
+            # (this method avoids a temporary state with the key not existing that might not be threadsafe)
+            CACHE_KEYS.sort(key=key.__eq__)
+            return CACHE[key]
 
-    value = function()
-    if key not in CACHE and not debug:
-        CACHE[key] = value
-        CACHE_KEYS.append(key)
+        while len(CACHE_KEYS) >= CACHE_MAX_SIZE:
+            remove_key = CACHE_KEYS.pop(0)
+            del CACHE[remove_key]
+
+        value = function()
+        if key not in CACHE and not debug:
+            CACHE[key] = value
+            CACHE_KEYS.append(key)
 
     return value
 
@@ -156,12 +175,17 @@ def uncache(key):
     # make the key memcache compatible
     key = key.replace(' ', '_')[:250]
 
-    if key in CACHE:
+    if MCACHE:
+        MCACHE.delete(key)
+    elif key in CACHE:
         del CACHE[key]
         CACHE_KEYS.remove(key)
 
 
 def clear_cache():
-    global CACHE, CACHE_KEYS
-    CACHE = {}
-    CACHE_KEYS = []
+    if MCACHE:
+        MCACHE.flush_all()
+    else:
+        global CACHE, CACHE_KEYS
+        CACHE = {}
+        CACHE_KEYS = []
