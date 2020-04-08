@@ -1,7 +1,9 @@
 # the base file and class for all controllers to inherit from
 
 # python imports
+import csv
 import http.client
+from io import StringIO
 import json
 import logging
 
@@ -158,6 +160,41 @@ class BaseController(web.RequestHandler):
             self.set_header('X-Xsrf-Token', self.xsrf_token)
             self.write(data)
             self.saveSession()
+
+    def renderJSONError(self, status_int, data=None, invalid_fields=None, stacktrace=None):
+        self.set_status(status_int)
+
+        if not data:
+            data = {}
+        data['error'] = http.client.responses[status_int]
+
+        if invalid_fields:
+            # invalid fields will often be dict_keys or a similar type, so always coerce to list for json here
+            data['invalid_fields'] = list(invalid_fields)
+
+        if stacktrace:
+            data['stacktrace'] = stacktrace
+
+        self.renderJSON(data)
+
+    def renderCSV(self, rows, filename):
+        memory_file = StringIO()
+        writer = csv.writer(memory_file)
+
+        writer.writerows(rows)
+
+        # get the file data, size, and clean up
+        csv_file = memory_file.getvalue()
+        memory_file.close()
+
+        # send the file
+        self.set_header('Content-Type', 'text/csv')
+        # NOTE: setting Content-Length causes "Tried to write more data than Content-Length" from Tornado
+        # see https://www.tornadoweb.org/en/stable/_modules/tornado/http1connection.html
+        # self.set_header('Content-Length', str(len(csv_file)))
+        filestring = "filename*=UTF-8''" + filename
+        self.set_header('Content-Disposition', 'attachment; ' + filestring + '.csv')
+        self.write(csv_file)
 
     async def head(self, *args):
         # support HEAD requests in a generic way
