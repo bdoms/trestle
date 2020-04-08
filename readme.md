@@ -1,11 +1,11 @@
 # Trestle
 
-Copyright &copy; 2019, [Brendan Doms](https://www.bdoms.com/)  
+Copyright &copy; 2019-2020, [Brendan Doms](https://www.bdoms.com/)  
 Licensed under the [MIT license](http://www.opensource.org/licenses/MIT)
 
 A jumping off point for building modern web apps.
 
-Uses Python 3, Tornado, and Peewee on the back end, with Vue, Svelte, or no JaaScript on the front end.
+Uses Python 3, Tornado, and Peewee on the back end, with Vue, Svelte, or no JavaScript on the front end.
 
 ## Setup
 
@@ -68,7 +68,7 @@ yarn install
 Make sure postgres is installed (the last dependency on here is for psycopg2 support):
 
 ```bash
-sudo apt install postgresql nginx supervisor libpq-dev
+sudo apt install postgresql libpq-dev
 ```
 
 Then get into postgres:

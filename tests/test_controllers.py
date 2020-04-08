@@ -604,6 +604,7 @@ class TestSitemap(BaseTestController):
     def test_sitemap(self):
         response = self.fetch('/sitemap.xml')
         assert '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' in response.body_string
+        assert response.headers.get('Content-Type') == 'application/xml'
 
 
 class TestStatic(BaseTestController):

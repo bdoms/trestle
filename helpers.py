@@ -117,7 +117,10 @@ def cacheAndRender(skip_check=None, content_type=None):
                 await action(*args, **kwargs)
                 html = b"".join(controller._write_buffer).decode()
 
-                html = htmlmin.minify(html, remove_comments=True, remove_empty_space=True)
+                remove_quotes = content_type != 'application/xml'
+
+                html = htmlmin.minify(html, remove_comments=True, remove_empty_space=True,
+                    remove_optional_attribute_quotes=remove_quotes)
 
                 if not controller.debug:
                     cache(key, lambda: html)

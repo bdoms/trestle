@@ -136,6 +136,9 @@ class BaseController(web.RequestHandler):
         self.set_header('Content-Security-Policy', CSP)
 
     def renderTemplate(self, filename, **kwargs):
+        if filename.endswith('.xml'):
+            self.set_header('Content-Type', 'application/xml')
+
         if self.request.method != 'HEAD':
             self.securityHeaders()
             # could have compile call `self.render` but it looks like a lot of extra processing we don't need
