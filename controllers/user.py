@@ -312,7 +312,7 @@ class LogoutController(BaseController):
     async def post(self):
         slug = self.get_secure_cookie('auth_key').decode()
         model.Auth.delete().where(model.Auth.id == slug).execute()
-        helpers.uncache(slug)
+        helpers.uncache('auth_' + slug)
 
         self.clear_all_cookies(domain=self.host)
         self.redirect("/")

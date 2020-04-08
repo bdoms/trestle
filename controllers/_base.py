@@ -215,17 +215,18 @@ class BaseController(web.RequestHandler):
             # secure cookies appear to always return bytes, and we need a string, so force it here
             slug = slug.decode()
 
-            valid, slug = validateRequiredInt(slug)
+            valid, int_slug = validateRequiredInt(slug)
 
             if valid:
-                auth = model.Auth.getBySlug(slug)
-                if auth:
-                    user = auth.user
-                else:
-                    self.flash('You have been logged out.')
+                # NOTE: there's a minor performance hit here for creating a nested function
+                #       this can be eliminated by refactoring the cache function to pass args and kwargs through
+                def getUser():
+                    return model.User.getByAuth(int_slug)
+                user = helpers.cache('auth_' + slug, getUser, debug=self.debug)
 
             if not user:
                 self.clear_cookie('auth_key', domain=self.host)
+                self.flash('You have been logged out.')
                 if self.request.path.startswith('/data/'):
                     self.renderJSONError(401)
                     raise web.Finish

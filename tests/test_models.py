@@ -34,6 +34,12 @@ class TestUser(BaseTestCase):
         assert len(auths) == 1
         assert isinstance(auths[0], model.Auth)
 
+    def test_getByAuth(self):
+        auth = self.createAuth()
+        user = model.User.getByAuth(auth.slug)
+        assert user
+        assert user.id == auth.user_id
+
     def test_getByEmail(self):
         created_user = self.createUser()
         queried_user = model.User.getByEmail(created_user.email)

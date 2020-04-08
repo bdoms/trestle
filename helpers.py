@@ -129,7 +129,7 @@ def cacheAndRender(skip_check=None, content_type=None):
     return wrap_action
 
 
-def cache(key, function):
+def cache(key, function, debug=False):
     # make the key memcache compatible
     key = key.replace(' ', '_')[:250]
 
@@ -145,7 +145,7 @@ def cache(key, function):
         del CACHE[remove_key]
 
     value = function()
-    if key not in CACHE:
+    if key not in CACHE and not debug:
         CACHE[key] = value
         CACHE_KEYS.append(key)
 

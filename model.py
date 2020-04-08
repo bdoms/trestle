@@ -46,6 +46,11 @@ class User(BaseModel):
     is_dev = BooleanField(default=False) # set this directly via the console
 
     @classmethod
+    def getByAuth(cls, slug):
+        auth = Auth.getBySlug(slug)
+        return auth and auth.user or None
+
+    @classmethod
     def getByEmail(cls, email):
         return cls.select().where(cls.email == email).first()
 
