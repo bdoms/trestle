@@ -16,7 +16,7 @@
 
     <p>
         <label for="password">Current Password</label>
-        <input type="password" name="password" id="password" required autofocus />
+        <input type="password" name="password" id="password" required autofocus minlength="8" />
         {#if errors.password}
             <span class="error">Please enter a valid password.</span>
         {/if}

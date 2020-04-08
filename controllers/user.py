@@ -12,6 +12,10 @@ import helpers
 # IMAGE_TYPES = ["gif", "jpg", "jpeg", "png"]
 
 
+def validatePassword(source):
+    return validateRequiredString(source, min_length=8)
+
+
 class BaseLoginController(BaseController):
 
     def login(self, user, new=False, remember=False):
@@ -26,6 +30,7 @@ class BaseLoginController(BaseController):
             auth = user.getAuth(ua)
 
         if auth:
+            # note that we want to save this even if it isn't different because it updates the last modified
             auth.ip = ip
             auth.save()
         else:
@@ -133,7 +138,7 @@ class AuthsController(BaseController):
 
 class EmailController(BaseController):
 
-    FIELDS = {"email": validateRequiredEmail, "password": validateRequiredString}
+    FIELDS = {"email": validateRequiredEmail, "password": validatePassword}
 
     @web.authenticated
     async def get(self):
@@ -183,7 +188,7 @@ class EmailController(BaseController):
 
 class PasswordController(BaseController):
 
-    FIELDS = {"password": validateRequiredString, "new_password": validateRequiredString}
+    FIELDS = {"password": validatePassword, "new_password": validatePassword}
 
     @web.authenticated
     async def get(self):
@@ -232,7 +237,7 @@ class SignupController(BaseLoginController):
 
     FIELDS = {
         "email": validateRequiredEmail,
-        "password": validateRequiredString
+        "password": validatePassword
     }
 
     @withoutUser
@@ -268,7 +273,7 @@ class SignupController(BaseLoginController):
 
 class LoginController(BaseLoginController):
 
-    FIELDS = {"email": validateRequiredEmail, "password": validateRequiredString, "remember": validateBool}
+    FIELDS = {"email": validateRequiredEmail, "password": validatePassword, "remember": validateBool}
 
     @withoutUser
     async def get(self):
@@ -345,7 +350,7 @@ class ForgotPasswordController(BaseController):
 
 class ResetPasswordController(BaseLoginController):
 
-    FIELDS = {"key": validateRequiredInt, "token": validateRequiredString, "password": validateRequiredString}
+    FIELDS = {"key": validateRequiredInt, "token": validateRequiredString, "password": validatePassword}
 
     @withoutUser
     def before(self):

@@ -13,7 +13,7 @@
 
     <p>
         <label for="password">Current Password</label>
-        <input type="password" name="password" id="password" required autofocus />
+        <input type="password" name="password" id="password" required autofocus minlength="8" />
         {#if errors.password}
             <span class="error">Please enter a valid password.</span>
         {/if}
@@ -21,7 +21,7 @@
 
     <p>
         <label for="new-password">New Password</label>
-        <input type="password" name="new_password" id="new-password" required />
+        <input type="password" name="new_password" id="new-password" required minlength="8" />
         {#if errors.new_password}
             <span class="error">Please enter a valid password.</span>
         {/if}
