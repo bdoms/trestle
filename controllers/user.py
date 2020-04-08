@@ -44,7 +44,7 @@ class BaseLoginController(BaseController):
 
         expires_days = remember and AUTH_EXPIRES_DAYS or None
         self.set_secure_cookie('auth_key', auth.slug, expires_days=expires_days, domain=HOST,
-            httponly=True, secure=not self.debug)
+            httponly=True, samesite='strict', secure=not self.debug)
 
         self.redirect("/home")
 

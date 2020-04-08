@@ -70,7 +70,7 @@ class BaseController(web.RequestHandler):
         # this needs to be called anywhere we're finishing the response (rendering, redirecting, etc.)
         if self.session != self.orig_session:
             self.set_secure_cookie('session', json.dumps(self.session), expires_days=AUTH_EXPIRES_DAYS,
-                domain=self.host, httponly=True, secure=not self.debug)
+                domain=self.host, httponly=True, samesite='strict', secure=not self.debug)
 
     @property
     def logger(self):

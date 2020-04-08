@@ -1,4 +1,5 @@
 # this is the main entry point for the application
+from http.cookies import Morsel
 import logging
 import os
 
@@ -13,6 +14,10 @@ from tasks import TaskConsumer
 
 # URL routes
 from controllers import admin, api, app, dev, error, home, index, sitemap, static, user
+
+# this is a monkey-patch to support the samesite cookie option
+# FUTURE: this can be removed if using Python 3.8+, as support for this was added there
+Morsel._reserved['samesite'] = 'SameSite'
 
 handlers = [
     ('/', index.IndexController),
@@ -87,7 +92,8 @@ def makeApp(domain=None, debug=False, autoreload=False, level=logging.INFO):
         compress_response=True,
         static_path=static_path, static_handler_class=static.StaticFileController,
         cookie_secret=constants.SESSION_KEY, xsrf_cookies=True,
-        xsrf_cookie_kwargs={'domain': domain, 'httponly': True, 'secure': not debug}, login_url='/user/login')
+        xsrf_cookie_kwargs={'domain': domain, 'httponly': True, 'secure': not debug, 'samesite': 'strict'},
+        login_url='/user/login')
 
 
 # see https://www.tornadoweb.org/en/stable/guide/running.html
