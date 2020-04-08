@@ -9,7 +9,7 @@ from peewee import (PostgresqlDatabase, BooleanField, CharField, DateTimeField,
 from config import constants
 
 peewee_db = PostgresqlDatabase(constants.DB_NAME, user=constants.DB_USER, password=constants.DB_PASS,
-    host=constants.DB_HOST, port=constants.DB_PORT, autoconnect=False)
+    host=constants.DB_HOST, port=constants.DB_PORT, sslmode=constants.DB_SSLMODE, autoconnect=False)
 
 
 class BaseModel(Model):
