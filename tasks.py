@@ -5,10 +5,11 @@ import urllib.error
 
 from config.constants import SENDGRID_API_KEY, SENDER_EMAIL
 import helpers
+import model
 
 import sendgrid
 from sendgrid.helpers import mail as sgmail
-from tornado import gen
+import tornado.ioloop
 from tornado.queues import Queue
 
 
@@ -21,12 +22,21 @@ class TaskConsumer(object):
     @classmethod
     async def consumer(cls, debug=False):
         async for item in cls.TASKQ:
-            # NOTE: sleeping is required to allow for context shifting away from this
-            await gen.sleep(.001)
+            # cls.LOGGER.info('Doing work on %s' % item)
+            callback = item.pop('callback')
+
+            # specify `'db': True` in the task params if you want it to run with a database connection
+            if item.pop('db', False):
+                def closure():
+                    with model.peewee_db:
+                        callback(item, debug=debug)
+            else:
+                def closure():
+                    callback(item, debug=debug)
+
             try:
-                # cls.LOGGER.info('Doing work on %s' % item)
-                callback = item.pop('callback')
-                callback(item, debug=debug)
+                # WARNING! running without a specified executor might not put a limit on the number of threads
+                await tornado.ioloop.IOLoop.current().run_in_executor(None, closure)
             finally:
                 cls.TASKQ.task_done()
 

@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, time
 import logging
 
-import tornado
+import tornado.ioloop
 
 import model
 
@@ -18,10 +18,17 @@ class Cron(object):
 
     @classmethod
     def first(cls, debug=False):
-        cls.run()
+        cls.run(debug=debug)
+
+        def closure():
+            cls.run(debug=debug)
+
+        async def runWrapper():
+            # WARNING! running without a specified executor might not put a limit on the number of threads
+            await tornado.ioloop.IOLoop.current().run_in_executor(None, closure)
 
         # after the first run this sets up the recurring call
-        tornado.ioloop.PeriodicCallback(cls.run, cls.FREQUENCY).start()
+        tornado.ioloop.PeriodicCallback(runWrapper, cls.FREQUENCY).start()
 
     @classmethod
     def setup(cls, debug=False):
