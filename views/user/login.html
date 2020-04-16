@@ -21,7 +21,7 @@
     </p>
     <p>
         <label for="password">Password</label>
-        <input type="password" name="password" id="password" required minlength="8" />
+        <input type="password" name="password" id="password" required autocomplete="current-password" minlength="8" />
         {% if errors.get('password') %}
             <span class="error">Please enter a valid password.</span>
         {% end %}
