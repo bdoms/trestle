@@ -112,15 +112,17 @@ class BaseController(web.RequestHandler):
         return self.render_string(filename, **kwargs)
 
     def set_default_headers(self):
+        # FUTURE: you can remove this whole method if you use the provided nginx config
         # set any headers that should be present with all request types
+        self.set_header('Referrer-Policy', 'origin')
         self.set_header('X-Content-Type-Options', 'nosniff')
         self.set_header('X-Frame-Options', 'deny') # deprecated in favor of CSP, but better safe than sorry
         self.set_header('X-XSS-Protection', '1')
 
-    def securityHeaders(self):
-        # uncomment to enable HSTS - note that it can have permanent consequences for your domain
-        # self.set_header('Strict-Transport-Security', 'max-age=86400; includeSubDomains')
+        if not self.debug:
+            self.set_header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload')
 
+    def securityHeaders(self):
         # this is purposefully strict by default
         # you can change site-wide or add logic for different environments or actions as needed
 
