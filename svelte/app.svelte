@@ -18,9 +18,9 @@
 <main>
     {#if loading}
         <p>Loading...</p>
+    {:else}
+        <svelte:component this={cmp} current_user={current_user}/>
     {/if}
-
-    <svelte:component this={cmp} current_user={current_user}/>
 </main>
 
 
