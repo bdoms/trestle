@@ -53,7 +53,7 @@ trestle.ajax = function(method, url, data, callback) {
             // assume JSON if string
             request.setRequestHeader('Content-Type', 'application/json');
             if (trestle.XSRF) {
-                request.setRequestHeader('X-Xsrf-Token', trestle.XSRF);
+                request.setRequestHeader('X-Xsrftoken', trestle.XSRF);
             }
         }
         else if (data instanceof FormData) {
