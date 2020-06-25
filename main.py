@@ -110,8 +110,9 @@ if __name__ == "__main__":
     # FUTURE: this should probably be run in a separate process, especially in production
     IOLoop.current().add_callback(TaskConsumer.consumer, debug=options.debug)
 
-    # FUTURE: this should probably also be in a separate process
-    IOLoop.current().add_callback(Cron.setup, debug=options.debug)
+    # CAREFUL only run this during development - supervisor should run this separately in production
+    if options.debug:
+        IOLoop.current().add_callback(Cron.setup, debug=options.debug)
 
     if options.debug:
         app = makeApp(domain=options.address, debug=True, autoreload=True, level=logging.DEBUG)

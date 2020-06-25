@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import json
 import logging
@@ -9,7 +10,7 @@ import model
 
 import sendgrid
 from sendgrid.helpers import mail as sgmail
-import tornado.ioloop
+from tornado.ioloop import IOLoop
 from tornado.queues import Queue
 
 
@@ -36,9 +37,14 @@ class TaskConsumer(object):
 
             try:
                 # WARNING! running without a specified executor might not put a limit on the number of threads
-                await tornado.ioloop.IOLoop.current().run_in_executor(None, closure)
+                await IOLoop.current().run_in_executor(None, closure)
             finally:
                 cls.TASKQ.task_done()
+
+        # we purposefully add ourself as a callback again
+        # without this it just runs once and then never again
+        asyncio.sleep(10)
+        IOLoop.current().add_callback(TaskConsumer.consumer, debug=debug)
 
 
 class Task(object):

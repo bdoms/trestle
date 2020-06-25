@@ -251,16 +251,10 @@ sudo apt install memcached
 
 #### Supervisor
 
-Create user for supervisor - this is so we don't have to run as root:
-
-```bash
-sudo adduser --system --no-create-home --disabled-login --disabled-password --group supervisor
-```
-
 Make directories for the app:
 
 ```bash
-sudo -u supervisor mkdir -p /srv/web
+sudo -u www-data mkdir -p /srv/web
 ```
 
 Create a sym link to the config.
@@ -276,12 +270,6 @@ sudo service supervisor restart
 ```
 
 #### Nginx
-
-Create nginx user (nginx will fail to start without this):
-
-```bash
-sudo adduser --system --no-create-home --disabled-login --disabled-password --group nginx
-```
 
 Create symbolic links to conf files:
 

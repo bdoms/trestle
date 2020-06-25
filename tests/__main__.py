@@ -13,7 +13,7 @@ os.environ['DB_PASS'] = 'trestle_test'
 def lint():
     # cli options at http://flake8.pycqa.org/en/latest/user/options.html
     # error code definitions at https://pep8.readthedocs.io/en/latest/intro.html
-    print('Running linter...')
+    print('Running linter...') # NOQA: T001
     app = application.Application()
     app.run([
         '--exclude=.git,__pycache__,node_modules,static,svelte,views',
@@ -21,7 +21,7 @@ def lint():
         '--max-line-length=120',
         '.',
     ])
-    print('Linting complete.')
+    print('Linting complete.') # NOQA: T001
 
 
 def unit(test_path=None):
