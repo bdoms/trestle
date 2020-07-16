@@ -192,7 +192,7 @@ Back end:
 
 ```bash
 poetry shell
-python main.py --debug=1
+python main.py --debug
 ```
 
 ##### If Using Svelte
