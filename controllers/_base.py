@@ -201,7 +201,7 @@ class BaseController(web.RequestHandler):
     async def head(self, *args):
         # support HEAD requests in a generic way
         if hasattr(self, 'get'):
-            self.get(*args)
+            await self.get(*args)
             # the output may be cached, but don't send it to save bandwidth
             self.clear()
         else:

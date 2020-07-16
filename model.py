@@ -5,11 +5,34 @@ from hashlib import sha512
 
 from peewee import (PostgresqlDatabase, BooleanField, CharField, DateTimeField,
     ForeignKeyField, Model) # TextField
+from tornado.ioloop import IOLoop
 
 from config import constants
 
 peewee_db = PostgresqlDatabase(constants.DB_NAME, user=constants.DB_USER, password=constants.DB_PASS,
     host=constants.DB_HOST, port=constants.DB_PORT, sslmode=constants.DB_SSLMODE, autoconnect=False)
+
+
+# NOTE: database functions are synchronous, so we have to run them in another thread to make them asynchronous
+# while this can create additional overhead you SHOULD use these functions if you have a long running query
+# if not, it can lock up the server
+def threaded_db(func, *args):
+    result = None
+    with peewee_db.connection_context():
+        result = func(*args)
+    return result
+
+
+# example use: async_db(list, User.select()) or async_db(User.select().count)
+async def async_db(func, *args):
+    result = await IOLoop.current().run_in_executor(None, threaded_db, func, *args)
+    # NOTE: peewee is supposed to store connections per thread
+    # and while you get an error about it not being open every time, it also looks like
+    # closing the connection in the child can also close it in the main thread
+    # so we check and re-open if needed - this assumes the connection is closed elsewhere (end of request)
+    if peewee_db.is_closed():
+        peewee_db.connect()
+    return result
 
 
 class BaseModel(Model):

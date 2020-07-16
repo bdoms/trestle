@@ -285,7 +285,7 @@ class TestBase(BaseMockController):
     @async_test
     async def test_head(self):
 
-        def get():
+        async def get():
             self.called = True
 
         self.controller.get = get
