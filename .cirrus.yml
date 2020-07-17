@@ -4,7 +4,7 @@ python_tests_task:
   pip_cache:
     folder: ~/.cache/pip
     fingerprint_script: echo $PYTHON_VERSION && cat pyproject.toml
-    populate_script: apk add gcc musl-dev libffi-dev openssl-dev && python3 -m pip install --upgrade poetry && poetry install
+    populate_script: apk add gcc musl-dev libffi-dev libpq-dev openssl-dev && python3 -m pip install --upgrade poetry && poetry install
   test_script: poetry run python tests
 
 flake8_task:
