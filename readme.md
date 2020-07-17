@@ -7,6 +7,12 @@ A jumping off point for building modern web apps.
 
 Uses Python 3, Tornado, and Peewee on the back end, with Vue, Svelte, or no JavaScript on the front end.
 
+## Test Status
+
+![Python Tests](https://api.cirrus-ci.com/github/bdoms/gae_validators.svg?task=python_tests)
+![Flake8 Linter](https://api.cirrus-ci.com/github/bdoms/gae_validators.svg?task=flake8)
+![Svelte Tests](https://api.cirrus-ci.com/github/bdoms/gae_validators.svg?task=svelte_tests)
+
 ## Setup
 
 Make sure you have [Python 3](https://www.python.org/) installed.

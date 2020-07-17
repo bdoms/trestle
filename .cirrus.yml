@@ -1,0 +1,27 @@
+container:
+  image: python:3-alpine
+
+python_tests_task:
+  test_script: python3 tests
+
+# build_package_task:
+#   pip_cache:
+#     folder: ~/.cache/pip
+#     fingerprint_script: echo $PYTHON_VERSION && cat pyproject.toml
+#     populate_script: apk add gcc musl-dev libffi-dev openssl-dev && python3 -m pip install --upgrade poetry
+#   build_package_test_script: poetry build
+
+flake8_task:
+  container:
+    image: alpine/flake8:latest
+  script: flake8 --ignore=E128,E261 --max-line-length=120 .
+
+svelte_tests_task:
+  container:
+    image: node:latest
+  node_modules_cache:
+    folder: node_modules
+    fingerprint_script: cat yarn.lock
+    populate_script: yarn install
+  build_script: yarn run build
+  test_script: yarn run test
