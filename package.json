@@ -22,13 +22,13 @@
   ],
   "dependencies": {},
   "devDependencies": {
-    "ava": "3.5.1",
+    "ava": "3.10.1",
     "browser-env": "3.3.0",
     "esm": "3.2.25",
-    "page": "1.11.5",
+    "page": "1.11.6",
     "parcel-bundler": "1.12.4",
     "parcel-plugin-svelte": "4.0.6",
-    "svelte": "3.20.1"
+    "svelte": "3.24.0"
   },
   "ava": {
     "files": [

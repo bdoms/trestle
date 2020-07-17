@@ -1,15 +1,11 @@
-container:
-  image: python:3-alpine
-
 python_tests_task:
-  test_script: python3 tests
-
-# build_package_task:
-#   pip_cache:
-#     folder: ~/.cache/pip
-#     fingerprint_script: echo $PYTHON_VERSION && cat pyproject.toml
-#     populate_script: apk add gcc musl-dev libffi-dev openssl-dev && python3 -m pip install --upgrade poetry
-#   build_package_test_script: poetry build
+  container:
+    image: python:3-alpine
+  pip_cache:
+    folder: ~/.cache/pip
+    fingerprint_script: echo $PYTHON_VERSION && cat pyproject.toml
+    populate_script: apk add gcc musl-dev libffi-dev openssl-dev && python3 -m pip install --upgrade poetry && poetry install
+  test_script: poetry run python tests
 
 flake8_task:
   container:
