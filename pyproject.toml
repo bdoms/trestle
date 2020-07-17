@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "trestle"
-version = "0.1.0"
+version = "0.1.5"
 description = "A modern Python and Tornado based jumping off point for building web apps with Vue or Svelte."
 
 license = "MIT"

@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 import unittest
 
 from flake8.main import application
@@ -22,6 +23,8 @@ def lint():
         '.',
     ])
     print('Linting complete.') # NOQA: T001
+    # app.exit() # could just call this but it exits early whereas we might want to do other things
+    return app.result_count < 1 and not app.catastrophic_failure
 
 
 def unit(test_path=None):
@@ -33,7 +36,8 @@ def unit(test_path=None):
     else:
         suite = loader.discover('tests')
 
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
+    return result.wasSuccessful()
 
 
 if __name__ == "__main__":
@@ -44,10 +48,16 @@ if __name__ == "__main__":
     group.add_argument('-u', '--unit', action='store_true', help='only run unit tests')
     args = parser.parse_args()
 
+    lint_success = unit_success = True
+
     if args.lint:
-        lint()
+        lint_success = lint()
     elif args.unit:
-        unit(test_path=args.test_path)
+        unit_success = unit(test_path=args.test_path)
     else:
-        lint()
-        unit(test_path=args.test_path)
+        lint_success = lint()
+        unit_success = unit(test_path=args.test_path)
+
+    # the function calls return success or not
+    # but exit codes are 0 (false) for success and anything else (true) for failure
+    sys.exit(not lint_success or not unit_success)

@@ -1,11 +1,26 @@
 python_tests_task:
   container:
-    image: python:3-alpine
+    image: python:3.7-alpine
+    additional_containers:
+      - name: postgres
+        image: postgres:12
+        port: 5432
+        env:
+          POSTGRES_USER: trestle_test
+          POSTGRES_PASSWORD: trestle_test
+          POSTGRES_DB: trestle_test
   pip_cache:
-    folder: ~/.cache/pip
+    folder: ~/.poetry
     fingerprint_script: echo $PYTHON_VERSION && cat pyproject.toml
-    populate_script: apk add gcc musl-dev libffi-dev libpq-dev openssl-dev && python3 -m pip install --upgrade poetry && poetry install
-  test_script: poetry run python tests
+    populate_script: apk add gcc musl-dev libffi-dev openssl-dev && python3 -m pip install --upgrade poetry
+  # encountering a bug trying to cache the poetry virtual env, so we turn off caching this for now
+  # https://stackoverflow.com/questions/61351659/the-virtual-environment-found-seems-to-be-broken-python-poetry
+  # poetry_cache:
+  #   folder: ~/.cache/pypoetry/virtualenvs
+  #   fingerprint_script: echo $PYTHON_VERSION && cat pyproject.toml
+  #   populate_script: apk add postgresql-dev py3-virtualenv && poetry install
+  deps_script: apk add postgresql-dev py3-virtualenv && poetry install
+  test_script: poetry run python tests --unit
 
 flake8_task:
   container:

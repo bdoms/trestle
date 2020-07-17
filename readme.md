@@ -9,9 +9,9 @@ Uses Python 3, Tornado, and Peewee on the back end, with Vue, Svelte, or no Java
 
 ## Test Status
 
-![Python Tests](https://api.cirrus-ci.com/github/bdoms/gae_validators.svg?task=python_tests)
-![Flake8 Linter](https://api.cirrus-ci.com/github/bdoms/gae_validators.svg?task=flake8)
-![Svelte Tests](https://api.cirrus-ci.com/github/bdoms/gae_validators.svg?task=svelte_tests)
+![Python Tests](https://api.cirrus-ci.com/github/bdoms/trestle.svg?task=python_tests)
+![Flake8 Linter](https://api.cirrus-ci.com/github/bdoms/trestle.svg?task=flake8)
+![Svelte Tests](https://api.cirrus-ci.com/github/bdoms/trestle.svg?task=svelte_tests)
 
 ## Setup
 
