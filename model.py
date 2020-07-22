@@ -62,7 +62,7 @@ class User(BaseModel):
     email = CharField()
     password_salt = CharField()
     hashed_password = CharField()
-    token = CharField(null=True)
+    hashed_token = CharField(null=True)
     token_dt = DateTimeField(null=True)
     # pic_url = CharField(null=True)
     is_admin = BooleanField(default=False)
@@ -90,12 +90,17 @@ class User(BaseModel):
     def getAuth(self, user_agent):
         return self.auths.where(Auth.user_agent == user_agent).first()
 
+    def hashToken(self, token):
+        token_salt = self.slug + '-' + self.token_dt.isoformat()
+        return User.hashPassword(token, token_salt.encode())
+
     def resetPassword(self):
         # python b64 always ends in '==' so we remove them because this is for use in a URL
-        self.token = base64.urlsafe_b64encode(os.urandom(16)).decode().replace('=', '')
+        token = base64.urlsafe_b64encode(os.urandom(16)).decode().replace('=', '')
         self.token_dt = datetime.utcnow()
+        self.hashed_token = self.hashToken(token)
         self.save()
-        return self
+        return token
 
     def toDict(self):
         return {'email': self.email}

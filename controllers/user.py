@@ -338,9 +338,9 @@ class ForgotPasswordController(BaseController):
             # for security, don't alert them if the user doesn't exist
             user = model.User.getByEmail(valid_data["email"].lower())
             if user:
-                user = user.resetPassword()
+                token = user.resetPassword()
                 self.deferEmail([user.email], "Reset Password", "reset_password.html",
-                    key=user.slug, token=user.token)
+                    key=user.slug, token=token)
 
             message = "Your password reset email has been sent. "
             message += "For security purposes it will expire in one hour."
@@ -364,10 +364,12 @@ class ResetPasswordController(BaseLoginController):
 
         if self.key and self.token:
             self.reset_user = model.User.getBySlug(self.key)
-            if self.reset_user and self.reset_user.token and self.token == self.reset_user.token:
-                # token is valid for one hour
-                if (datetime.utcnow() - self.reset_user.token_dt).total_seconds() < 3600:
-                    is_valid = True
+            if self.reset_user and self.reset_user.hashed_token and self.reset_user.token_dt:
+                hashed_token = self.reset_user.hashToken(self.token)
+                if hashed_token == self.reset_user.hashed_token:
+                    # token is valid for one hour
+                    if (datetime.utcnow() - self.reset_user.token_dt).total_seconds() < 3600:
+                        is_valid = True
 
         if not is_valid:
             self.flash("That reset password link has expired.", level="error")
@@ -388,7 +390,7 @@ class ResetPasswordController(BaseLoginController):
             del valid_data["password"]
             self.reset_user.password_salt = password_salt
             self.reset_user.hashed_password = hashed_password
-            self.reset_user.token = None
+            self.reset_user.hashed_token = None
             self.reset_user.token_dt = None
             self.reset_user.save()
 
