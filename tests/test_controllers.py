@@ -807,8 +807,7 @@ class TestUser(BaseTestController):
         assert 'That reset password link has expired.' in response.body_string
 
         # with the right auth this page should display properly
-        self.user = self.user.resetPassword()
-        token = self.user.token
+        token = self.user.resetPassword()
         response = self.sessionGet('/user/resetpassword?key=' + key + '&token=' + token)
         assert '<h2>Reset Password</h2>' in response.body_string
 
@@ -823,11 +822,11 @@ class TestUser(BaseTestController):
         assert 'Invalid client.' in response.body_string
 
         # posting a new password should log the user in - reset again to get a new token
-        self.user = self.user.resetPassword()
-        data["token"] = self.user.token
+        token = self.user.resetPassword()
+        data["token"] = token
 
         # generate a new xsrf after the successful post above
-        self.sessionGet('/user/resetpassword?key=' + key + '&token=' + self.user.token)
+        self.sessionGet('/user/resetpassword?key=' + key + '&token=' + token)
 
         response = self.sessionPost('/user/resetpassword', data)
         assert '<h2>Logged In Home Page</h2>' in response.body_string
@@ -844,8 +843,7 @@ class TestUser(BaseTestController):
         assert 'That reset password link has expired.' in response.body_string
 
         # test that an expired token actually fails
-        self.user = self.user.resetPassword()
-        token = self.user.token
+        token = self.user.resetPassword()
 
         # works the first time
         response = self.fetch('/user/resetpassword?key=' + key + '&token=' + token)

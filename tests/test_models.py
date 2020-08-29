@@ -82,10 +82,10 @@ class TestUser(BaseTestCase):
         orig = model.os.urandom
         model.os.urandom = self.stubUrandom
 
-        user = user.resetPassword()
+        token = user.resetPassword()
 
         # revert the stub to the original now that the method has been called
         model.os.urandom = orig
 
-        assert user.token == "Y29uc3RhbnQ" # "constant" base64 encoded for URLs
+        assert token == "Y29uc3RhbnQ" # "constant" base64 encoded for URLs
         assert (datetime.utcnow() - user.token_dt).total_seconds() < 1 # should be very fresh
