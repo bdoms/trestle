@@ -11,7 +11,8 @@ class StaticController(BaseController):
     async def get(self, *args):
 
         path = self.request.path
-        filename = "static/" + path + ".html"
+        assert path.startswith('/')
+        filename = "static" + path + ".html"
         page_title = path.replace("/", " ").strip().title()
 
         self.renderTemplate(filename, page_title=page_title)
