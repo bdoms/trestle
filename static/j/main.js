@@ -15,7 +15,7 @@ trestle.joinParams = function(params) {
     return query.join('&');
 };
 
-trestle.ajax = function(method, url, data, callback) {
+trestle.ajax = function(method, url, data, callback, error_callback) {
     // compatible with IE7+, Firefox, Chrome, Opera, Safari
     var request = new XMLHttpRequest();
 
