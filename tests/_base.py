@@ -46,35 +46,35 @@ class BaseTestCase(unittest.TestCase):
         model.peewee_db.close()
 
     # fixtures
-    def createUser(self, email=None, is_admin=False, **kwargs):
+    def createAccount(self, email=None, is_admin=False, **kwargs):
         display_name = "Test display name" + UCHAR
         email = email or "test" + UCHAR + "@example.com"
         password = "Test password" + UCHAR
 
-        other_user = model.User.getByEmail(email)
-        assert not other_user, "That email address is already in use."
+        other = model.Account.getByEmail(email)
+        assert not other, "That email address is already in use."
 
         # NOTE that username is lowercased here - it maybe should not be in the future
-        password_salt, hashed_password = model.User.changePassword(password)
-        user = model.User.create(display_name=display_name, email=email,
+        password_salt, hashed_password = model.Account.changePassword(password)
+        account = model.Account.create(display_name=display_name, email=email,
             password_salt=password_salt, hashed_password=hashed_password, is_admin=is_admin, **kwargs)
 
-        user.password = password # for convenience with signing in during testing
+        account.password = password # for convenience with signing in during testing
 
-        if not hasattr(self, 'user'):
+        if not hasattr(self, 'account'):
             # this is the default, so add an easy reference to it
-            self.user = user
+            self.account = account
 
-        return user
+        return account
 
-    def createAuth(self, user=None):
-        if not user:
-            if not hasattr(self, 'user'):
-                self.createUser()
-            user = self.user
+    def createAuth(self, account=None):
+        if not account:
+            if not hasattr(self, 'account'):
+                self.createAccount()
+            account = self.account
 
         auth = model.Auth.create(user_agent='test user agent' + UCHAR, os='test os' + UCHAR,
-            browser='test browser' + UCHAR, device='test device' + UCHAR, ip='127.0.0.1', user=user)
+            browser='test browser' + UCHAR, device='test device' + UCHAR, ip='127.0.0.1', account=account)
 
         if not hasattr(self, 'auth'):
             self.auth = auth

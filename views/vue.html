@@ -23,10 +23,10 @@
     <nav>
         <ul>
             <li><router-link to="/vue/home">Home</router-link></li>
-            <li><router-link to="/vue/user">Account Settings</router-link></li>
+            <li><router-link to="/vue/account">Account Settings</router-link></li>
             <li>
                 <a href="#" v-on:click.prevent="$root.logOut">Log Out</a>
-                <form id="logout-form" method="post" action="/user/logout">
+                <form id="logout-form" method="post" action="/account/logout">
                     {% raw xsrf_form_html() %}
                 </form>
             </li>
@@ -53,9 +53,9 @@
 <h2>Account Settings</h2>
 
 <ul>
-    <li><a href="/vue/user/auths">Active Sessions</a></li>
-    <li><a href="/vue/user/email">Change Email</a></li>
-    <li><a href="/vue/user/password">Change Password</a></li>
+    <li><a href="/vue/account/auths">Active Sessions</a></li>
+    <li><a href="/vue/account/email">Change Email</a></li>
+    <li><a href="/vue/account/password">Change Password</a></li>
 </ul>
 
 </div></script>
@@ -101,10 +101,10 @@
                     Current Session
                 </div>
                 <div v-else>
-                    <form action="/user/auths" method="post" v-on:submit.prevent="revokeAccess($event, index)">
+                    <form action="/account/auths" method="post" v-on:submit.prevent="revokeAccess($event, index)">
                         <input type="hidden" name="_xsrf"/>
                         <input type="hidden" name="auth_key" :value="auth.slug" />
-    
+
                         <input type="submit" value="Revoke Access" />
                     </form>
                 </div>
@@ -120,7 +120,7 @@
 
 <h2>Change Email</h2>
 
-<form action="/user/email" method="post" v-on:submit.prevent="changeEmail">
+<form action="/account/email" method="post" v-on:submit.prevent="changeEmail">
     <input type="hidden" name="_xsrf"/>
 
     <p v-if="errors.match" class="error">Invalid current password. Please try again.</p>
@@ -149,7 +149,7 @@
 
 <h2>Change Password</h2>
 
-<form action="/user/password" method="post" v-on:submit.prevent="changePassword">
+<form action="/account/password" method="post" v-on:submit.prevent="changePassword">
     <input type="hidden" name="_xsrf"/>
 
     <p v-if="errors.match" class="error">Invalid current password. Please try again.</p>

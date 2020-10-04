@@ -13,7 +13,7 @@ from cron import Cron
 from tasks import TaskConsumer
 
 # URL routes
-from controllers import admin, api, app, dev, error, home, index, sitemap, static, user
+from controllers import account, admin, api, app, dev, error, home, index, sitemap, static
 
 # this is a monkey-patch to support the samesite cookie option
 # FUTURE: this can be removed if using Python 3.8+, as support for this was added there
@@ -25,27 +25,27 @@ handlers = [
 
     # svelte routes
     ('/svelte/home', app.SvelteController),
-    ('/svelte/user', app.SvelteController),
-    ('/svelte/user/auths', app.SvelteController),
-    ('/svelte/user/email', app.SvelteController),
-    ('/svelte/user/password', app.SvelteController),
+    ('/svelte/account', app.SvelteController),
+    ('/svelte/account/auths', app.SvelteController),
+    ('/svelte/account/email', app.SvelteController),
+    ('/svelte/account/password', app.SvelteController),
 
     # vue routes
     ('/vue/home', app.VueController),
-    ('/vue/user', app.VueController),
-    ('/vue/user/auths', app.VueController),
-    ('/vue/user/email', app.VueController),
-    ('/vue/user/password', app.VueController),
+    ('/vue/account', app.VueController),
+    ('/vue/account/auths', app.VueController),
+    ('/vue/account/email', app.VueController),
+    ('/vue/account/password', app.VueController),
 
-    ('/user', user.IndexController),
-    ('/user/auths', user.AuthsController),
-    ('/user/email', user.EmailController),
-    ('/user/password', user.PasswordController),
-    ('/user/signup', user.SignupController),
-    ('/user/login', user.LoginController),
-    ('/user/logout', user.LogoutController),
-    ('/user/forgotpassword', user.ForgotPasswordController),
-    ('/user/resetpassword', user.ResetPasswordController),
+    ('/account', account.IndexController),
+    ('/account/auths', account.AuthsController),
+    ('/account/email', account.EmailController),
+    ('/account/password', account.PasswordController),
+    ('/account/signup', account.SignupController),
+    ('/account/login', account.LoginController),
+    ('/account/logout', account.LogoutController),
+    ('/account/forgotpassword', account.ForgotPasswordController),
+    ('/account/resetpassword', account.ResetPasswordController),
     ('/terms', static.StaticController),
     ('/privacy', static.StaticController),
     ('/sitemap.xml', sitemap.SitemapController),
@@ -93,7 +93,7 @@ def makeApp(domain=None, debug=False, autoreload=False, level=logging.INFO):
         static_path=static_path, static_handler_class=static.StaticFileController,
         cookie_secret=constants.SESSION_KEY, xsrf_cookies=True,
         xsrf_cookie_kwargs={'domain': domain, 'httponly': True, 'secure': not debug, 'samesite': 'strict'},
-        login_url='/user/login')
+        login_url='/account/login')
 
 
 # see https://www.tornadoweb.org/en/stable/guide/running.html

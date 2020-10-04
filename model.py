@@ -23,7 +23,7 @@ def threaded_db(func, *args):
     return result
 
 
-# example use: async_db(list, User.select()) or async_db(User.select().count)
+# example use: async_db(list, Account.select()) or async_db(Account.select().count)
 async def async_db(func, *args):
     result = await IOLoop.current().run_in_executor(None, threaded_db, func, *args)
     # NOTE: peewee is supposed to store connections per thread
@@ -58,7 +58,7 @@ class BaseModel(Model):
         return super().save(*args, **kwargs)
 
 
-class User(BaseModel):
+class Account(BaseModel):
     email = CharField()
     password_salt = CharField()
     hashed_password = CharField()
@@ -68,10 +68,13 @@ class User(BaseModel):
     is_admin = BooleanField(default=False)
     is_dev = BooleanField(default=False) # set this directly via the console
 
+    class Meta:
+        table_name = 'account'
+
     @classmethod
     def getByAuth(cls, slug):
         auth = Auth.getBySlug(slug)
-        return auth and auth.user or None
+        return auth and auth.account or None
 
     @classmethod
     def getByEmail(cls, email):
@@ -92,7 +95,7 @@ class User(BaseModel):
 
     def hashToken(self, token):
         token_salt = self.slug + '-' + self.token_dt.isoformat()
-        return User.hashPassword(token, token_salt.encode())
+        return Account.hashPassword(token, token_salt.encode())
 
     def resetPassword(self):
         # python b64 always ends in '==' so we remove them because this is for use in a URL
@@ -112,7 +115,10 @@ class Auth(BaseModel):
     browser = CharField(null=True)
     device = CharField(null=True)
     ip = CharField()
-    user = ForeignKeyField(User, backref='auths')
+    account = ForeignKeyField(Account, backref='auths')
+
+    class Meta:
+        table_name = 'auth'
 
     def toDict(self):
         return {
@@ -126,13 +132,18 @@ class Auth(BaseModel):
         }
 
 
+# CAREFUL when creating new models - avoid Postgres keywords if that's your backend
+# while peewee can handle them other ORMs or manual work might not
+# see https://www.postgresql.org/docs/current/sql-keywords-appendix.html
+
+
 def generateToken(size):
     return base64.urlsafe_b64encode(os.urandom(size)).decode().replace('=', '')
 
 
 def reset():
     # order matters here - have to delete in the right direction given foreign key constraints
-    tables = [Auth, User]
+    tables = [Auth, Account]
 
     for table in tables:
         table.drop_table()

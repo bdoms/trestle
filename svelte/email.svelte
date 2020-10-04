@@ -4,7 +4,7 @@
 
 <h2>Change Email</h2>
 
-<form action="/user/email" method="post" on:submit|preventDefault="{changeEmail}">
+<form action="/account/email" method="post" on:submit|preventDefault="{changeEmail}">
     <input type="hidden" name="_xsrf"/>
 
     {#if errors.match}
@@ -63,4 +63,3 @@
         });
     };
 </script>
-    

@@ -5,7 +5,7 @@ import httpagentparser
 from tornado import web
 
 from config.constants import AUTH_EXPIRES_DAYS, HOST
-from controllers._base import BaseController, withoutUser
+from controllers._base import BaseController, withoutAccount
 import model
 import helpers
 
@@ -44,7 +44,7 @@ class BaseLoginController(BaseController):
             if 'dist' in parsed:
                 # "dist" stands for "distribution" - like Android, iOS
                 device = parsed['dist']['name']
-            auth = model.Auth(user_agent=ua, os=os, browser=browser, device=device, ip=ip, user=user)
+            auth = model.Auth(user_agent=ua, os=os, browser=browser, device=device, ip=ip, account=user)
             auth.save()
 
         expires_days = remember and AUTH_EXPIRES_DAYS or None
@@ -59,7 +59,7 @@ class IndexController(BaseController):
     @web.authenticated
     async def get(self):
 
-        self.renderTemplate('user/index.html')
+        self.renderTemplate('account/index.html')
 
     # @web.authenticated
     # def post(self):
@@ -104,7 +104,7 @@ class AuthsController(BaseController):
         if self.get_argument('app', None):
             return self.renderJSON({'auths': [auth.toDict() for auth in auths], 'current_auth_id': current_auth_key})
 
-        self.renderTemplate('user/auths.html', auths=auths, current_auth_key=current_auth_key)
+        self.renderTemplate('account/auths.html', auths=auths, current_auth_key=current_auth_key)
 
     @web.authenticated
     async def post(self):
@@ -122,7 +122,7 @@ class AuthsController(BaseController):
         if not auth:
             return self.renderError(404)
 
-        if auth.user_id != self.current_user.id:
+        if auth.account_id != self.current_user.id:
             return self.renderError(403)
 
         auth.delete_instance()
@@ -143,7 +143,7 @@ class EmailController(BaseController):
     @web.authenticated
     async def get(self):
 
-        self.renderTemplate('user/email.html')
+        self.renderTemplate('account/email.html')
 
     @web.authenticated
     async def post(self):
@@ -151,7 +151,7 @@ class EmailController(BaseController):
         app = self.get_argument('app', None)
         form_data, errors, valid_data = self.validate()
 
-        hashed_password = model.User.hashPassword(valid_data["password"],
+        hashed_password = model.Account.hashPassword(valid_data["password"],
             self.current_user.password_salt.encode('utf8'))
 
         if hashed_password != self.current_user.hashed_password:
@@ -162,7 +162,7 @@ class EmailController(BaseController):
             # note that emails are supposed to be case sensitive according to RFC 5321
             # however in practice users consistenly expect them to be case insensitive
             email = valid_data["email"].lower()
-            user = model.User.getByEmail(email)
+            user = model.Account.getByEmail(email)
             if user:
                 errors["exists"] = True
 
@@ -183,7 +183,7 @@ class EmailController(BaseController):
             return self.renderJSON({'ok': '1'})
 
         self.flash("Email changed successfully.", level="success")
-        self.redirect("/user")
+        self.redirect("/account")
 
 
 class PasswordController(BaseController):
@@ -193,7 +193,7 @@ class PasswordController(BaseController):
     @web.authenticated
     async def get(self):
 
-        self.renderTemplate('user/password.html')
+        self.renderTemplate('account/password.html')
 
     @web.authenticated
     async def post(self):
@@ -202,7 +202,7 @@ class PasswordController(BaseController):
         form_data, errors, valid_data = self.validate()
 
         if not errors:
-            hashed_password = model.User.hashPassword(valid_data["password"],
+            hashed_password = model.Account.hashPassword(valid_data["password"],
                 self.current_user.password_salt.encode('utf8'))
 
             if hashed_password != self.current_user.hashed_password:
@@ -219,7 +219,7 @@ class PasswordController(BaseController):
 
             return self.redisplay(form_data, errors)
 
-        password_salt, hashed_password = model.User.changePassword(valid_data["new_password"])
+        password_salt, hashed_password = model.Account.changePassword(valid_data["new_password"])
 
         self.current_user.password_salt = password_salt
         self.current_user.hashed_password = hashed_password
@@ -230,7 +230,7 @@ class PasswordController(BaseController):
             return self.renderJSON({'ok': '1'})
 
         self.flash("Password changed successfully.", level="success")
-        self.redirect("/user")
+        self.redirect("/account")
 
 
 class SignupController(BaseLoginController):
@@ -240,12 +240,12 @@ class SignupController(BaseLoginController):
         "password": validatePassword
     }
 
-    @withoutUser
+    @withoutAccount
     async def get(self):
 
-        self.renderTemplate('user/signup.html')
+        self.renderTemplate('account/signup.html')
 
-    @withoutUser
+    @withoutAccount
     async def post(self):
 
         form_data, errors, valid_data = self.validate()
@@ -254,7 +254,7 @@ class SignupController(BaseLoginController):
         if not errors:
             # FUTURE: keep an un-lowered copy of this for potential display?
             valid_data["email"] = valid_data["email"].lower()
-            user = model.User.getByEmail(valid_data["email"])
+            user = model.Account.getByEmail(valid_data["email"])
             if user:
                 errors["exists"] = True
 
@@ -263,10 +263,10 @@ class SignupController(BaseLoginController):
                 del form_data["password"] # never send password back for security
             self.redisplay(form_data, errors)
         else:
-            password_salt, hashed_password = model.User.changePassword(valid_data["password"])
+            password_salt, hashed_password = model.Account.changePassword(valid_data["password"])
             del valid_data["password"]
 
-            user = model.User(password_salt=password_salt, hashed_password=hashed_password, **valid_data)
+            user = model.Account(password_salt=password_salt, hashed_password=hashed_password, **valid_data)
             user.save()
             self.login(user, new=True)
 
@@ -275,12 +275,12 @@ class LoginController(BaseLoginController):
 
     FIELDS = {"email": validateRequiredEmail, "password": validatePassword, "remember": validateBool}
 
-    @withoutUser
+    @withoutAccount
     async def get(self):
 
-        self.renderTemplate('user/login.html')
+        self.renderTemplate('account/login.html')
 
-    @withoutUser
+    @withoutAccount
     async def post(self):
 
         form_data, errors, valid_data = self.validate()
@@ -288,9 +288,9 @@ class LoginController(BaseLoginController):
         # check that the user exists and the password matches
         user = None
         if not errors:
-            user = model.User.getByEmail(valid_data["email"].lower())
+            user = model.Account.getByEmail(valid_data["email"].lower())
             if user:
-                hashed_password = model.User.hashPassword(valid_data["password"], user.password_salt.encode('utf8'))
+                hashed_password = model.Account.hashPassword(valid_data["password"], user.password_salt.encode('utf8'))
                 if hashed_password != user.hashed_password:
                     # note that to dissuade brute force attempts the error for not finding the user
                     # and not matching the password should be the same
@@ -322,12 +322,12 @@ class ForgotPasswordController(BaseController):
 
     FIELDS = {"email": validateRequiredEmail}
 
-    @withoutUser
+    @withoutAccount
     async def get(self):
 
-        self.renderTemplate('user/forgot_password.html')
+        self.renderTemplate('account/forgot_password.html')
 
-    @withoutUser
+    @withoutAccount
     async def post(self):
 
         form_data, errors, valid_data = self.validate()
@@ -336,7 +336,7 @@ class ForgotPasswordController(BaseController):
             self.redisplay(form_data, errors)
         else:
             # for security, don't alert them if the user doesn't exist
-            user = model.User.getByEmail(valid_data["email"].lower())
+            user = model.Account.getByEmail(valid_data["email"].lower())
             if user:
                 token = user.resetPassword()
                 self.deferEmail([user.email], "Reset Password", "reset_password.html",
@@ -352,7 +352,7 @@ class ResetPasswordController(BaseLoginController):
 
     FIELDS = {"key": validateRequiredInt, "token": validateRequiredString, "password": validatePassword}
 
-    @withoutUser
+    @withoutAccount
     def before(self):
         is_valid = False
 
@@ -363,7 +363,7 @@ class ResetPasswordController(BaseLoginController):
         self.token = token
 
         if self.key and self.token:
-            self.reset_user = model.User.getBySlug(self.key)
+            self.reset_user = model.Account.getBySlug(self.key)
             if self.reset_user and self.reset_user.hashed_token and self.reset_user.token_dt:
                 hashed_token = self.reset_user.hashToken(self.token)
                 if hashed_token == self.reset_user.hashed_token:
@@ -373,20 +373,20 @@ class ResetPasswordController(BaseLoginController):
 
         if not is_valid:
             self.flash("That reset password link has expired.", level="error")
-            self.redirect("/user/forgotpassword")
+            self.redirect("/account/forgotpassword")
 
     async def get(self):
 
-        self.renderTemplate('user/reset_password.html', key=self.key, token=self.token)
+        self.renderTemplate('account/reset_password.html', key=self.key, token=self.token)
 
     async def post(self):
 
         form_data, errors, valid_data = self.validate()
 
         if errors:
-            self.redisplay(form_data, errors, "/user/resetpassword?key=" + self.key + "&token=" + self.token)
+            self.redisplay(form_data, errors, "/account/resetpassword?key=" + self.key + "&token=" + self.token)
         else:
-            password_salt, hashed_password = model.User.changePassword(valid_data["password"])
+            password_salt, hashed_password = model.Account.changePassword(valid_data["password"])
             del valid_data["password"]
             self.reset_user.password_salt = password_salt
             self.reset_user.hashed_password = hashed_password

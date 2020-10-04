@@ -5,10 +5,10 @@
 <nav>
     <ul>
         <li><a href="/svelte/home">Home</a></li>
-        <li><a href="/svelte/user">Account Settings</a></li>
+        <li><a href="/svelte/account">Account Settings</a></li>
         <li>
             <a on:click|preventDefault="{logOut}" href="#">Log Out</a>
-            <form id="logout-form" method="post" action="/user/logout">
+            <form id="logout-form" method="post" action="/account/logout">
                 <input type="hidden" name="_xsrf"/>
             </form>
         </li>

@@ -29,7 +29,7 @@ class LogErrorController(BaseController):
 
         # send an email notifying us of this error
         self.deferEmail([SUPPORT_EMAIL], "Error Alert", "error_alert.html", method='',
-            message=exception.message, user=self.current_user, url=self.request.headers.get('referer'))
+            message=exception.message, account=self.current_user, url=self.request.headers.get('referer'))
 
 
 class PolicyViolationController(BaseController):
@@ -48,7 +48,7 @@ class PolicyViolationController(BaseController):
 
         # send an email notifying us of this error
         self.deferEmail([SUPPORT_EMAIL], "Error Alert", "error_alert.html", method='',
-            message=exception.message, user=self.current_user, url=self.request.headers.get('referer'))
+            message=exception.message, account=self.current_user, url=self.request.headers.get('referer'))
 
 
 class JavascriptError(Exception):

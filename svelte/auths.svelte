@@ -38,10 +38,10 @@
                 {#if auth.slug == current_auth_id}
                     Current Session
                 {:else}
-                    <form action="/user/auths" method="post" on:submit|preventDefault="{() => revokeAccess(event, index)}">
+                    <form action="/account/auths" method="post" on:submit|preventDefault="{() => revokeAccess(event, index)}">
                         <input type="hidden" name="_xsrf"/>
                         <input type="hidden" name="auth_key" value="{auth.slug}" />
-    
+
                         <input type="submit" value="Revoke Access" />
                     </form>
                 {/if}
@@ -62,7 +62,7 @@
     let current_auth_id = '';
 
     onMount(async function() {
-        utils.ajax('GET', '/user/auths?app=1', {}, function(data) {
+        utils.ajax('GET', '/account/auths?app=1', {}, function(data) {
             auths = data.auths;
             current_auth_id = data.current_auth_id;
         });
@@ -79,4 +79,3 @@
         });
     };
 </script>
-    

@@ -4,7 +4,7 @@
 
 <h2>Change Password</h2>
 
-<form action="/user/password" method="post" on:submit|preventDefault="{changePassword}">
+<form action="/account/password" method="post" on:submit|preventDefault="{changePassword}">
     <input type="hidden" name="_xsrf"/>
 
     {#if errors.match}
@@ -47,4 +47,3 @@
         });
     };
 </script>
-    

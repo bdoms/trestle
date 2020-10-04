@@ -41,16 +41,16 @@
                     <li><a href="/admin">Admin</a></li>
                 {% end %}
                 <li><a href="/home">Home</a></li>
-                <li><a href="/user">Account Settings</a></li>
+                <li><a href="/account">Account Settings</a></li>
                 <li>
                     <a id="logout-link" href="#">Log Out</a>
-                    <form id="logout-form" method="post" action="/user/logout">
+                    <form id="logout-form" method="post" action="/account/logout">
                         {% raw xsrf_form_html() %}
                     </form>
                 </li>
             {% else %}
-                <li><a href="/user/signup">Sign Up</a></li>
-                <li><a href="/user/login">Log In</a></li>
+                <li><a href="/account/signup">Sign Up</a></li>
+                <li><a href="/account/login">Log In</a></li>
             {% end %}
         </ul>
     </nav>

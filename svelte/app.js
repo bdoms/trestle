@@ -1,6 +1,6 @@
 import App from './app.svelte';
 import Home from './home';
-import User from './user';
+import Account from './account';
 import Auths from './auths';
 import Email from './email';
 import Password from './password';
@@ -22,10 +22,10 @@ window.onunhandledrejection = function(error) {
 
 const routes = {
 	'/svelte/home': Home,
-	'/svelte/user': User,
-	'/svelte/user/auths': Auths,
-	'/svelte/user/email': Email,
-	'/svelte/user/password': Password
+	'/svelte/account': Account,
+	'/svelte/account/auths': Auths,
+	'/svelte/account/email': Email,
+	'/svelte/account/password': Password
 };
 
 const app = new App({

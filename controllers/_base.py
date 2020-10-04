@@ -244,11 +244,11 @@ class BaseController(web.RequestHandler):
         # send an email notifying about this error if it's in the 500 range
         if status_code > 499:
             self.deferEmail([SUPPORT_EMAIL], "Error Alert", "error_alert.html", message=message,
-                user=self.current_user, url=self.request.full_url(), method=self.request.method)
+                account=self.current_user, url=self.request.full_url(), method=self.request.method)
 
     # this is called automatically to set the current_user property
     def get_current_user(self):
-        user = None
+        account = None
         slug = self.get_secure_cookie('auth_key')
         if slug:
             # secure cookies appear to always return bytes, and we need a string, so force it here
@@ -260,17 +260,17 @@ class BaseController(web.RequestHandler):
                 # NOTE: there's a minor performance hit here for creating a nested function
                 #       this can be eliminated by refactoring the cache function to pass args and kwargs through
                 def getUser():
-                    return model.User.getByAuth(int_slug)
-                user = helpers.cache('auth_' + slug, getUser, debug=self.debug)
+                    return model.Account.getByAuth(int_slug)
+                account = helpers.cache('auth_' + slug, getUser, debug=self.debug)
 
-            if not user:
+            if not account:
                 self.clear_cookie('auth_key', domain=self.host)
                 self.flash('You have been logged out.')
                 if self.request.path.startswith('/data/'):
                     self.renderJSONError(401)
                     raise web.Finish
 
-        return user
+        return account
 
     def deferEmail(self, to, subject, filename, reply_to=None, attachments=None, **kwargs):
         # FUTURE: should HTML rendering be done in the queue rather than here?
@@ -325,7 +325,7 @@ class BaseController(web.RequestHandler):
         return form_data, errors, valid_data
 
 
-def withoutUser(action):
+def withoutAccount(action):
     def decorate(*args, **kwargs):
         controller = args[0]
         if not controller.current_user:

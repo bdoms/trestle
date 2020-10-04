@@ -121,15 +121,15 @@ class BaseTestController(BaseTestCase, AsyncHTTPTestCase):
         value_split = response.body_string.split('name="_xsrf" value="', 1)[1]
         return value_split.split('"', 1)[0]
 
-    def login(self, user=None):
-        if not user and hasattr(self, "user"):
-            user = self.user
-        assert user, "A user is required to sign in."
-        return self.sessionPost('/user/login', {'email': user.email, 'password': user.password})
+    def login(self, account=None):
+        if not account and hasattr(self, "account"):
+            account = self.account
+        assert account, "An account is required to sign in."
+        return self.sessionPost('/account/login', {'email': account.email, 'password': account.password})
 
     def logout(self):
         self.sessionGet('/home')
-        response = self.sessionPost('/user/logout', {})
+        response = self.sessionPost('/account/logout', {})
         self.prior_response = None
         self.cookies = {}
         return response
@@ -157,7 +157,7 @@ class BaseMockController(BaseTestController):
         self.controller.orig_session = {}
 
     def mockLogin(self):
-        self.auth = self.createAuth(self.user)
+        self.auth = self.createAuth(self.account)
         self.controller.session["auth_key"] = self.auth.slug
 
 
@@ -341,11 +341,11 @@ class TestBase(BaseMockController):
         # assert len(messages) == 1
         # assert messages[0].to == SUPPORT_EMAIL
         # assert messages[0].subject == "Error Alert"
-        # assert "A User Has Experienced an Error" in str(messages[0].html)
+        # assert "A Account Has Experienced an Error" in str(messages[0].html)
 
     def test_get_current_user(self):
-        user = self.createUser()
-        auth = self.createAuth(self.user)
+        account = self.createAccount()
+        auth = self.createAuth(self.account)
 
         self.mockSessions()
 
@@ -359,7 +359,7 @@ class TestBase(BaseMockController):
 
         self.controller.get_secure_cookie = get_secure_cookie
 
-        # to begin with the user should return nothing
+        # to begin with the account should return nothing
         assert self.controller.current_user is None
 
         # if an invalid auth key is added it should still return none without errors
@@ -375,20 +375,20 @@ class TestBase(BaseMockController):
         self.controller.current_user = self.controller.get_current_user()
         assert self.controller.current_user is None
 
-        # finally if a valid keys is added to the session it should return the user object
+        # finally if a valid keys is added to the session it should return the account object
         cookie = auth.slug.encode() # needs to be bytes, not string
         self.controller.current_user = self.controller.get_current_user()
 
         assert self.controller.current_user is not None
-        assert self.controller.current_user.id == user.id
+        assert self.controller.current_user.id == account.id
 
         self.controller.get_secure_cookie = orig_cookie
 
     def test_deferEmail(self):
         to = 'test' + UCHAR + '@example.com'
         subject = 'Subject' + UCHAR
-        # html = '<p>A User Has Experienced an Error</p>'
-        self.controller.deferEmail([to], subject, 'error_alert.html', user=None, url='', method='', message='')
+        # html = '<p>A Account Has Experienced an Error</p>'
+        self.controller.deferEmail([to], subject, 'error_alert.html', account=None, url='', method='', message='')
 
         # move mails out of the queue so we can test them
         # self.executeDeferred(name='mail')
@@ -408,7 +408,7 @@ class TestBase(BaseMockController):
         filename = 'file.ext'
         attachments = [{'content': content, 'content_id': cid, 'filename': filename, 'type': 'mime/type'}]
         self.controller.deferEmail([to], subject, 'error_alert.html', attachments=attachments, reply_to=reply_to,
-            user=None, url='', method='', message='')
+            account=None, url='', method='', message='')
 
         # self.executeDeferred(name='mail')
         # messages = self.mail_stub.get_sent_messages()
@@ -456,9 +456,9 @@ class TestDecorators(BaseMockController):
         self.controller = self.controller_base.BaseController(self._app, self.getMockRequest())
 
     @async_test
-    async def test_withoutUser(self):
+    async def test_withoutAccount(self):
         self.mockSessions()
-        self.createUser()
+        self.createAccount()
         model.peewee_db.close()
         await self.controller.prepare()
         self.controller._transforms = [] # normally done in execute, so we have to do it manually
@@ -466,16 +466,16 @@ class TestDecorators(BaseMockController):
         def action(x):
             return 'action'
 
-        decorator = self.controller_base.withoutUser(action)
+        decorator = self.controller_base.withoutAccount(action)
 
-        # without a user the action should complete without a redirect
+        # without a account the action should complete without a redirect
         response = decorator(self.controller)
         assert response == "action"
         assert self.controller.get_status() != 302
 
-        # with a user the action should not complete and it should redirect
+        # with a account the action should not complete and it should redirect
         self.mockLogin()
-        self.controller.current_user = self.user
+        self.controller.current_user = self.account
         response = decorator(self.controller)
         assert response != "action"
         assert self.controller.get_status() == 302
@@ -587,7 +587,7 @@ class TestHome(BaseTestController):
 
     def setUp(self):
         super(TestHome, self).setUp()
-        self.createUser()
+        self.createAccount()
 
     def test_home(self):
         response = self.sessionGet('/home')
@@ -617,139 +617,140 @@ class TestStatic(BaseTestController):
             assert "<h2>" + pages[page] + "</h2>" in response.body_string, pages[page] + " not found"
 
 
-class TestUser(BaseTestController):
+class TestAccount(BaseTestController):
 
     def setUp(self):
-        super(TestUser, self).setUp()
-        self.createUser()
-        self.other_user = self.createUser(email='test2@test.com')
-        self.other_auth = self.createAuth(user=self.other_user)
+        super(TestAccount, self).setUp()
+        self.createAccount()
+        self.other_account = self.createAccount(email='test2@test.com')
+        self.other_auth = self.createAuth(account=self.other_account)
 
-    def test_user(self):
+    def test_account(self):
         self.login()
 
-        response = self.fetch('/user')
+        response = self.fetch('/account')
         assert '<h2>Account Settings</h2>' in response.body_string
         # assert 'alt="Profile Pic"' not in response.body_string
 
         # test upload - upload_files doesn't actually seem to work, so we test what we can
         # upload_files = [("profile_pic", "profile.jpg", b"file content", "")]
-        # response = self.sessionPost('/user', {}, upload_files=upload_files)
+        # response = self.sessionPost('/account', {}, upload_files=upload_files)
         # assert '<h2>Account Settings</h2>' in response.body_string
 
         # test delete
-        # response = self.sessionPost('/user', {'delete': '1'})
+        # response = self.sessionPost('/account', {'delete': '1'})
         # assert '<h2>Account Settings</h2>' in response.body_string
 
     def test_auths(self):
         self.login()
-        user_auth = self.createAuth(self.user)
+        account_auth = self.createAuth(self.account)
 
-        response = self.sessionGet('/user/auths')
+        response = self.sessionGet('/account/auths')
         assert '<h2>Active Sessions</h2>' in response.body_string
-        assert user_auth.modified_dt.isoformat() in response.body_string
+        assert account_auth.modified_dt.isoformat() in response.body_string
+        assert self.other_auth.modified_dt.isoformat() not in response.body_string
         assert 'Current Session' in response.body_string
 
-        # test that the user is not allowed to remove another's auth
+        # test that the account is not allowed to remove another's auth
         data = {'auth_key': self.other_auth.slug}
 
-        response = self.sessionPost('/user/auths', data)
+        response = self.sessionPost('/account/auths', data)
         assert response.code == 403
 
-        data['auth_key'] = user_auth.slug
-        response = self.sessionPost('/user/auths', data)
+        data['auth_key'] = account_auth.slug
+        response = self.sessionPost('/account/auths', data)
         assert '<h2>Active Sessions</h2>' in response.body_string
-        assert user_auth.modified_dt.isoformat() not in response.body_string
+        assert account_auth.modified_dt.isoformat() not in response.body_string
 
     def test_changeEmail(self):
         self.login()
 
-        response = self.fetch('/user/email')
+        response = self.fetch('/account/email')
         assert '<h2>Change Email</h2>' in response.body_string
 
         data = {}
-        data["email"] = self.user.email
+        data["email"] = self.account.email
         data["password"] = "wrong password"
 
-        response = self.sessionPost('/user/email', data)
+        response = self.sessionPost('/account/email', data)
         assert 'Invalid current password.' in response.body_string
 
-        data["password"] = self.user.password
-        response = self.sessionPost('/user/email', data)
+        data["password"] = self.account.password
+        response = self.sessionPost('/account/email', data)
         assert 'That email address is already in use.' in response.body_string
 
         data["email"] = "changeemail.test" + UCHAR + "@example.com"
-        response = self.sessionPost('/user/email', data)
+        response = self.sessionPost('/account/email', data)
         assert 'Email changed successfully.' in response.body_string
 
     def test_changePassword(self):
         self.login()
 
-        response = self.fetch('/user/password')
+        response = self.fetch('/account/password')
         assert '<h2>Change Password</h2>' in response.body_string
 
         data = {}
         data["new_password"] = "Test change password" + UCHAR
         data["password"] = "wrong password"
 
-        response = self.sessionPost('/user/password', data)
+        response = self.sessionPost('/account/password', data)
         assert 'Invalid current password.' in response.body_string
 
-        data["password"] = self.user.password
-        response = self.sessionPost('/user/password', data)
+        data["password"] = self.account.password
+        response = self.sessionPost('/account/password', data)
         assert 'Password changed successfully.' in response.body_string
 
     def test_signup(self):
-        response = self.fetch('/user/signup')
+        response = self.fetch('/account/signup')
         assert '<h2>Sign Up</h2>' in response.body_string
 
         data = {}
         data["first_name"] = "Test first name" + UCHAR
         data["last_name"] = "Test last name" + UCHAR
-        data["email"] = self.user.email
+        data["email"] = self.account.email
         data["password"] = "Test password" + UCHAR
 
-        response = self.sessionPost('/user/signup', data)
+        response = self.sessionPost('/account/signup', data)
         assert 'That email address is already in use.' in response.body_string
 
-        # signup succeeds but won't login without valid user agent or IP address
+        # signup succeeds but won't login without a valid user agent or IP address
         data["email"] = "signup.test" + UCHAR + "@example.com"
 
-        response = self.sessionPost('/user/signup', data, headers={})
+        response = self.sessionPost('/account/signup', data, headers={})
         assert 'Invalid client.' in response.body_string
 
         # success - use a new email address to avoid conflict with the previous partial success
         data["email"] = "signup2.test" + UCHAR + "@example.com"
 
-        response = self.sessionPost('/user/signup', data)
+        response = self.sessionPost('/account/signup', data)
         assert '<h2>Logged In Home Page</h2>' in response.body_string
 
     def test_login(self):
-        response = self.sessionGet('/user/login')
+        response = self.sessionGet('/account/login')
         assert '<h2>Log In</h2>' in response.body_string
 
-        # using an email address not associated with a user should fail silently
+        # using an email address not associated with a account should fail silently
         data = {}
         data["email"] = "doesnt.exist" + UCHAR + "@test.com"
         data["password"] = "wrong password"
 
-        response = self.sessionPost('/user/login', data)
+        response = self.sessionPost('/account/login', data)
         assert 'Email and password do not match.' in response.body_string
 
         # a wrong password should also not succeed, even when the email exists
-        data["email"] = self.user.email
+        data["email"] = self.account.email
 
-        response = self.sessionPost('/user/login', data)
+        response = self.sessionPost('/account/login', data)
         assert 'Email and password do not match.' in response.body_string
 
         # login fails without a user agent or IP address even when password is correct
-        data["password"] = self.user.password
+        data["password"] = self.account.password
 
-        response = self.sessionPost('/user/login', data, headers={})
+        response = self.sessionPost('/account/login', data, headers={})
         assert 'Invalid client.' in response.body_string
 
         # success
-        response = self.sessionPost('/user/login', data)
+        response = self.sessionPost('/account/login', data)
         assert 'id' in response.body_string
 
         # get another page to confirm it works on subsequent requests
@@ -760,22 +761,22 @@ class TestUser(BaseTestController):
         self.login()
 
         # should not allow logging out via GET
-        response = self.fetch('/user/logout')
+        response = self.fetch('/account/logout')
         assert response.code == 405
 
         # get another page so logout can use the xsrf token
         response = self.sessionGet('/home')
 
-        response = self.sessionPost('/user/logout', {})
+        response = self.sessionPost('/account/logout', {})
         assert '<h2>Index Page</h2>' in response.body_string
 
     def test_forgotPassword(self):
-        response = self.fetch('/user/forgotpassword')
+        response = self.fetch('/account/forgotpassword')
         assert '<h2>Forget Your Password?</h2>' in response.body_string
 
-        # using an email address not associated with a user should fail silently
+        # using an email address not associated with a account should fail silently
         data = {"email": "doesnt.exist" + UCHAR + "@example.com"}
-        response = self.sessionPost('/user/forgotpassword', data)
+        response = self.sessionPost('/account/forgotpassword', data)
         assert 'Your password reset email has been sent.' in response.body_string
 
         # but the mail queue should be empty
@@ -783,76 +784,76 @@ class TestUser(BaseTestController):
         # messages = self.mail_stub.get_sent_messages()
         # assert len(messages) == 0
 
-        # an email address that is associated with a user should respond the same
-        data = {"email": self.user.email}
-        response = self.sessionPost('/user/forgotpassword', data)
+        # an email address that is associated with a account should respond the same
+        data = {"email": self.account.email}
+        response = self.sessionPost('/account/forgotpassword', data)
         assert 'Your password reset email has been sent.' in response.body_string
 
         # except this time the mail queue should have something
         # self.executeDeferred(name="mail")
         # messages = self.mail_stub.get_sent_messages()
         # assert len(messages) == 1
-        # assert messages[0].to == self.user.email
+        # assert messages[0].to == self.account.email
         # assert messages[0].subject == "Reset Password"
 
     def test_resetPassword(self):
-        key = self.user.slug
+        key = self.account.slug
 
         # without the right authorization this page should redirect with a warning
-        response = self.fetch('/user/resetpassword')
+        response = self.fetch('/account/resetpassword')
         assert 'That reset password link has expired.' in response.body_string
 
-        # even if the user is found the token needs to be right
-        response = self.fetch('/user/resetpassword?key=' + key + '&token=wrong')
+        # even if the account is found the token needs to be right
+        response = self.fetch('/account/resetpassword?key=' + key + '&token=wrong')
         assert 'That reset password link has expired.' in response.body_string
 
         # with the right auth this page should display properly
-        token = self.user.resetPassword()
-        response = self.sessionGet('/user/resetpassword?key=' + key + '&token=' + token)
+        token = self.account.resetPassword()
+        response = self.sessionGet('/account/resetpassword?key=' + key + '&token=' + token)
         assert '<h2>Reset Password</h2>' in response.body_string
 
-        # posting a new password but without user agent or IP address won't log in
+        # posting a new password but without a user agent or IP address won't log in
         new_password = "Test password2" + UCHAR
         data = {}
         data["password"] = new_password
         data["key"] = key
         data["token"] = token
 
-        response = self.sessionPost('/user/resetpassword', data, headers={})
+        response = self.sessionPost('/account/resetpassword', data, headers={})
         assert 'Invalid client.' in response.body_string
 
-        # posting a new password should log the user in - reset again to get a new token
-        token = self.user.resetPassword()
+        # posting a new password should log the account in - reset again to get a new token
+        token = self.account.resetPassword()
         data["token"] = token
 
         # generate a new xsrf after the successful post above
-        self.sessionGet('/user/resetpassword?key=' + key + '&token=' + token)
+        self.sessionGet('/account/resetpassword?key=' + key + '&token=' + token)
 
-        response = self.sessionPost('/user/resetpassword', data)
+        response = self.sessionPost('/account/resetpassword', data)
         assert '<h2>Logged In Home Page</h2>' in response.body_string
 
         # should be able to log in with the new password now too
         self.logout()
-        self.user.password = new_password
+        self.account.password = new_password
         response = self.login()
         assert '<h2>Logged In Home Page</h2>' in response.body_string
 
         # test that we can't reset a second time
         self.logout()
-        response = self.fetch('/user/resetpassword?key=' + key + '&token=' + token)
+        response = self.fetch('/account/resetpassword?key=' + key + '&token=' + token)
         assert 'That reset password link has expired.' in response.body_string
 
         # test that an expired token actually fails
-        token = self.user.resetPassword()
+        token = self.account.resetPassword()
 
         # works the first time
-        response = self.fetch('/user/resetpassword?key=' + key + '&token=' + token)
+        response = self.fetch('/account/resetpassword?key=' + key + '&token=' + token)
         assert '<h2>Reset Password</h2>' in response.body_string
 
         # fails when we move back the date
-        self.user.token_dt = self.user.token_dt - timedelta(seconds=3600)
-        self.user.save()
-        response = self.fetch('/user/resetpassword?key=' + key + '&token=' + token)
+        self.account.token_dt = self.account.token_dt - timedelta(seconds=3600)
+        self.account.save()
+        response = self.fetch('/account/resetpassword?key=' + key + '&token=' + token)
         assert 'That reset password link has expired.' in response.body_string
 
 
@@ -860,20 +861,20 @@ class TestAdmin(BaseTestController):
 
     def setUp(self):
         super(TestAdmin, self).setUp()
-        self.normal_user = self.createUser()
-        self.admin_user = self.createUser(email="admin.test@example.com", is_admin=True)
+        self.normal_account = self.createAccount()
+        self.admin_account = self.createAccount(email="admin.test@example.com", is_admin=True)
 
     def test_admin(self):
         response = self.sessionGet('/admin')
         assert '<h2>Log In</h2>' in response.body_string
 
-        response = self.login(self.normal_user)
+        response = self.login(self.normal_account)
 
         response = self.sessionGet('/admin')
         assert response.code == 403
 
         self.logout()
-        self.login(self.admin_user)
+        self.login(self.admin_account)
 
         response = self.sessionGet('/admin')
         assert '<h2>Admin</h2>' in response.body_string
@@ -883,7 +884,7 @@ class TestAPI(BaseTestController):
 
     def setUp(self):
         super(TestAPI, self).setUp()
-        self.createUser()
+        self.createAccount()
 
     def test_upload(self):
         self.login()
@@ -891,7 +892,7 @@ class TestAPI(BaseTestController):
         # get a page first so the XSRF is generated (no get action for api)
         self.sessionGet('/home')
 
-        response = self.sessionPost('/api/upload', {'url': '/user'})
+        response = self.sessionPost('/api/upload', {'url': '/account'})
         assert 'url' in response.body_string
 
 
@@ -899,8 +900,8 @@ class TestDev(BaseTestController):
 
     def setUp(self):
         super(TestDev, self).setUp()
-        self.createUser()
-        self.dev_user = self.createUser(email='dev@test.com', is_dev=True)
+        self.createAccount()
+        self.dev_account = self.createAccount(email='dev@test.com', is_dev=True)
 
     # override this to turn debug off to ensure protections on the dev page
     def get_app(self):
@@ -916,7 +917,7 @@ class TestDev(BaseTestController):
         assert response.code == 403
 
         self.logout()
-        self.login(self.dev_user)
+        self.login(self.dev_account)
 
         response = self.sessionGet('/dev')
         assert '<h2>Dev</h2>' in response.body_string

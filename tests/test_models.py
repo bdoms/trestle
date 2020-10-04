@@ -8,46 +8,46 @@ import model
 class TestBaseModel(BaseTestCase):
 
     def test_slug(self):
-        self.createUser()
-        assert self.user.slug
-        assert isinstance(self.user.slug, str)
+        self.createAccount()
+        assert self.account.slug
+        assert isinstance(self.account.slug, str)
 
     def test_getBySlug(self):
-        created_user = self.createUser()
-        gotten_user = model.User.getBySlug(created_user.slug)
-        assert gotten_user
-        assert created_user.id == gotten_user.id
+        created = self.createAccount()
+        retrieved = model.Account.getBySlug(created.slug)
+        assert retrieved
+        assert created.id == retrieved.id
 
     def test_save(self):
         # TODO
         pass
 
 
-class TestUser(BaseTestCase):
+class TestAccount(BaseTestCase):
 
     def stubUrandom(self, n):
         return b"constant"
 
     def test_auths(self):
         self.createAuth()
-        auths = list(self.user.auths)
+        auths = list(self.account.auths)
         assert len(auths) == 1
         assert isinstance(auths[0], model.Auth)
 
     def test_getByAuth(self):
         auth = self.createAuth()
-        user = model.User.getByAuth(auth.slug)
-        assert user
-        assert user.id == auth.user_id
+        account = model.Account.getByAuth(auth.slug)
+        assert account
+        assert account.id == auth.account_id
 
     def test_getByEmail(self):
-        created_user = self.createUser()
-        queried_user = model.User.getByEmail(created_user.email)
-        assert queried_user
-        assert created_user.id == queried_user.id
+        created = self.createAccount()
+        queried = model.Account.getByEmail(created.email)
+        assert queried
+        assert created.id == queried.id
 
     def test_hashPassword(self):
-        result = model.User.hashPassword("test password" + UCHAR, ("test salt" + UCHAR).encode('utf8'))
+        result = model.Account.hashPassword("test password" + UCHAR, ("test salt" + UCHAR).encode('utf8'))
 
         hsh = "4ac2a746698395e501c1f5f271a6e99db751112b9af5fb0dc2240393c1ea"
         hsh += "658971913b3799023c948aa9c1b2fad8da75051f7f25103d4bcf3b106b52cd317be4"
@@ -58,7 +58,7 @@ class TestUser(BaseTestCase):
         orig_random = model.os.urandom
         model.os.urandom = self.stubUrandom
 
-        password_salt, hashed_password = model.User.changePassword("test password" + UCHAR)
+        password_salt, hashed_password = model.Account.changePassword("test password" + UCHAR)
 
         # revert the stub to the original now that the method has been called
         model.os.urandom = orig_random
@@ -71,21 +71,21 @@ class TestUser(BaseTestCase):
 
     def test_getAuth(self):
         self.createAuth()
-        auth = self.user.getAuth(self.auth.user_agent)
+        auth = self.account.getAuth(self.auth.user_agent)
         assert auth
         assert auth.id == self.auth.id
 
     def test_resetPassword(self):
-        user = self.createUser()
+        account = self.createAccount()
 
         # stub the os urandom method so that we get constant results
         orig = model.os.urandom
         model.os.urandom = self.stubUrandom
 
-        token = user.resetPassword()
+        token = account.resetPassword()
 
         # revert the stub to the original now that the method has been called
         model.os.urandom = orig
 
         assert token == "Y29uc3RhbnQ" # "constant" base64 encoded for URLs
-        assert (datetime.utcnow() - user.token_dt).total_seconds() < 1 # should be very fresh
+        assert (datetime.utcnow() - account.token_dt).total_seconds() < 1 # should be very fresh
