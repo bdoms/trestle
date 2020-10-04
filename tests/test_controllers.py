@@ -114,12 +114,30 @@ class BaseTestController(BaseTestCase, AsyncHTTPTestCase):
             response = self.prior_response
             self.prior_response = None
         else:
+            # NOTE: could also do `or 'app=1' in url`, etc, whatever is needed here
+            if url.startswith('/data') or url == '/logout':
+                # swap the url for a page we know will have the token in it
+                url = '/'
             response = self.fetch(url)
             assert response.code == 200
             self.setCookie(response)
 
-        value_split = response.body_string.split('name="_xsrf" value="', 1)[1]
-        return value_split.split('"', 1)[0]
+        # this will be set sometimes on data URLs and the like
+        token = response.headers.get('X-Xsrf-Token')
+
+        if not token:
+            parts = []
+            if 'name="_xsrf" value="' in response.body_string:
+                parts = response.body_string.split('name="_xsrf" value="', 1)
+            elif 'id="_xsrf" value="' in response.body_string:
+                parts = response.body_string.split('id="_xsrf" value="', 1)
+
+            assert len(parts) > 1, 'Page is missing XSRF: ' + url
+
+            value_split = parts[1]
+            token = value_split.split('"', 1)[0]
+
+        return token
 
     def login(self, account=None):
         if not account and hasattr(self, "account"):
