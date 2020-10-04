@@ -103,7 +103,7 @@ utils.getFormData = function(form) {
     return data;
 };
 
-utils.submitForm = function(form, callback) {
+utils.submitForm = function(form, callback, error_callback) {
     // handles some basic form submission boilerplate
     if (form.disabled) {
         // prevent multiple submits
@@ -122,9 +122,13 @@ utils.submitForm = function(form, callback) {
 		if (callback) {
 			callback(data);
 		}
-    }, function() {
+    }, function(status, error_data) {
         // this is a failure case where the request didn't work
         utils.toggleForm(form, true);
+
+        if (error_callback) {
+			error_callback(status, error_data);
+		}
     });
 };
 

@@ -4,7 +4,7 @@
 
 <h2>Change Email</h2>
 
-<form action="/account/email" method="post" on:submit|preventDefault="{changeEmail}">
+<form action="/account/email?app=1" method="post" on:submit|preventDefault="{changeEmail}">
     <input type="hidden" name="_xsrf"/>
 
     {#if errors.match}
@@ -28,7 +28,7 @@
         {#if errors.email}
             <span v-if="errors.email" class="error">Please enter a valid email.</span>
         {/if}
-        {#if success.ok}
+        {#if saved}
             <span class="success">Saved</span>
         {/if}
     </p>
@@ -43,23 +43,20 @@
     export let current_user;
 
     let errors = {};
-    let success = {};
+    let saved = false;
 
     let changeEmail = function(e) {
-        // doing it this way creates a closure around the component properties
-        // which means they get updated reactively when modified in the other non-component code
-        // the alternatives are
-        //   1) setting up subscriptions here and firing events in the util function
-        //   2) using a store
-        utils.submitForm(this, function(error_data, success_data) {
-            errors = error_data;
-            success = success_data;
+        errors = {};
+        saved = false;
 
-            if (success.ok) {
-                // we want to update the value, but we do not want it to be reactive with the form input
-                // that's in case the user never actually submits the form, or there's an error
-                current_user.email = document.getElementById('email').value;
-            }
+        utils.submitForm(this, function(data) {
+            saved = true;
+
+            // we want to update the value, but we do not want it to be reactive with the form input
+            // that's in case the user never actually submits the form, or there's an error
+            current_user.email = document.getElementById('email').value;
+        }, function(status, data) {
+            errors = data.errors;
         });
     };
 </script>

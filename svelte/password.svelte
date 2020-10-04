@@ -4,7 +4,7 @@
 
 <h2>Change Password</h2>
 
-<form action="/account/password" method="post" on:submit|preventDefault="{changePassword}">
+<form action="/account/password?app=1" method="post" on:submit|preventDefault="{changePassword}">
     <input type="hidden" name="_xsrf"/>
 
     {#if errors.match}
@@ -25,7 +25,7 @@
         {#if errors.new_password}
             <span class="error">Please enter a valid password.</span>
         {/if}
-        {#if success.ok}
+        {#if saved}
             <span class="success">Saved</span>
         {/if}
     </p>
@@ -38,12 +38,16 @@
     import utils from './utils';
 
     let errors = {};
-    let success = {};
+    let saved = false;
 
     let changePassword = function(e) {
-        utils.submitForm(this, function(error_data, success_data) {
-            errors = error_data;
-            success = success_data;
+        errors = {};
+        saved = false;
+
+        utils.submitForm(this, function(data) {
+            saved = true;
+        }, function(status, data) {
+            errors = data.errors;
         });
     };
 </script>

@@ -114,15 +114,21 @@ class AuthsController(BaseController):
 
         if errors:
             if app:
-                return self.renderJSON({'errors': errors})
+                return self.renderJSONError(400, {'errors': errors})
 
             return self.redisplay(form_data, errors)
 
         auth = model.Auth.getBySlug(valid_data['auth_key'])
         if not auth:
+            if app:
+                self.renderJSONError(404)
+
             return self.renderError(404)
 
         if auth.account_id != self.current_user.id:
+            if app:
+                return self.renderJSONError(403)
+
             return self.renderError(403)
 
         auth.delete_instance()
@@ -171,7 +177,7 @@ class EmailController(BaseController):
                 del form_data["password"] # never send password back for security
 
             if app:
-                return self.renderJSON({'errors': errors})
+                return self.renderJSONError(400, {'errors': errors})
 
             return self.redisplay(form_data, errors)
 
@@ -215,7 +221,7 @@ class PasswordController(BaseController):
                 del form_data["new_password"]
 
             if app:
-                return self.renderJSON({'errors': errors})
+                return self.renderJSONError(400, {'errors': errors})
 
             return self.redisplay(form_data, errors)
 

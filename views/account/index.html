@@ -18,7 +18,7 @@
 </p>
 
 <p>
-    <form method="post" action="/user" enctype="multipart/form-data" class="upload-form">
+    <form method="post" action="/account" enctype="multipart/form-data" class="upload-form">
         {% raw xsrf_form_html() %}
         <input type="file" name="profile_pic" />
         <input type="submit" value="Upload New" />
@@ -32,9 +32,9 @@
 </p> #}
 
 <ul>
-    <li><a href="/user/auths">Active Sessions</a></li>
-    <li><a href="/user/email">Change Email</a></li>
-    <li><a href="/user/password">Change Password</a></li>
+    <li><a href="/account/auths">Active Sessions</a></li>
+    <li><a href="/account/email">Change Email</a></li>
+    <li><a href="/account/password">Change Password</a></li>
 </ul>
 
 {% end %}
