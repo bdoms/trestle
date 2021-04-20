@@ -20,6 +20,11 @@ class BaseLoginController(BaseController):
 
     def login(self, user, new=False, remember=False):
         ua = self.request.headers.get('User-Agent', '')
+        if ua.startswith('Tornado'):
+            # this is a change in tornado 6.1 - instead of returning nothing if the user agent is missing
+            # they put in a defualt like "Tornado/6.1" - but we want to try to detect this
+            ua = None
+
         ip = self.request.remote_ip or ''
         # reject a login attempt without a user agent or IP address
         if not ua or not ip:
