@@ -9,7 +9,19 @@ import utils from './utils';
 
 // this should come as early as possible
 window.onerror = function(error, script, line, char) {
-    var error_data = {'error': error, 'script': script, 'location': line + ':' + char};
+    // don't report errors from extensions
+    if (script && script.indexOf('chrome-extension') > -1) {
+        console.warn('Extension Error');
+        return;
+    }
+
+    // don't report errors from with external scripts (ads, iframes, etc.)
+    if (script === '' && line === 0 && char === 0) {
+        console.warn('Unknown Script Error');
+        return;
+    }
+
+    var error_data = {'error': error, 'script': script, 'location': line + ':' + char, 'URL': document.location.href};
     utils.ajax('POST', '/logerror', {'javascript': JSON.stringify(error_data)});
 };
 
