@@ -4,7 +4,7 @@ from datetime import datetime
 from hashlib import sha512
 
 from peewee import (PostgresqlDatabase, BooleanField, CharField, DateTimeField,
-    ForeignKeyField, Model) # TextField
+    ForeignKeyField, Model, DoesNotExist) # TextField
 from tornado.ioloop import IOLoop
 
 from config import constants
@@ -52,6 +52,13 @@ class BaseModel(Model):
     def getBySlug(cls, slug):
         # this is preferable to `get_by_id` because we can return None rather than an error
         return cls.select().where(cls.id == slug).first()
+
+    def refresh(self):
+        try:
+            entity = type(self).get(self._pk_expr())
+        except DoesNotExist:
+            entity = None
+        return entity
 
     def save(self, *args, **kwargs):
         self.modified_dt = datetime.utcnow()
