@@ -141,7 +141,7 @@ class BaseController(web.RequestHandler):
 
     def renderTemplate(self, filename, **kwargs):
         if filename.endswith('.xml'):
-            self.set_header('Content-Type', 'application/xml')
+            self.set_header('Content-Type', 'application/xml; charset=UTF-8')
 
         if self.request.method != 'HEAD':
             self.securityHeaders()
@@ -156,7 +156,7 @@ class BaseController(web.RequestHandler):
         self.renderTemplate("error.html", stacktrace=stacktrace, page_title=page_title)
 
     def renderJSON(self, data):
-        self.set_header('Content-Type', 'application/json')
+        self.set_header('Content-Type', 'application/json; charset=UTF-8')
         if self.request.method != 'HEAD':
             # auto add the xsrf token in to every response
             self.set_header('X-Xsrf-Token', self.xsrf_token)
@@ -190,7 +190,7 @@ class BaseController(web.RequestHandler):
         memory_file.close()
 
         # send the file
-        self.set_header('Content-Type', 'text/csv')
+        self.set_header('Content-Type', 'text/csv; charset=UTF-8')
         # NOTE: setting Content-Length causes "Tried to write more data than Content-Length" from Tornado
         # see https://www.tornadoweb.org/en/stable/_modules/tornado/http1connection.html
         # self.set_header('Content-Length', str(len(csv_file)))
