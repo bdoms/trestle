@@ -87,7 +87,7 @@ window.onerror = function(error, script, line, char) {
     }
 
     // don't report errors from with external scripts (ads, iframes, etc.)
-    if (script === '' && line === 0 && char === 0) {
+    if (script === '' && (line === 0 || line === undefined) && (char === 0 || char === undefined)) {
         console.warn('Unknown Script Error');
         return;
     }
