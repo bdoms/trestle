@@ -20,6 +20,10 @@
   "browserslist": [
     "last 1 chrome versions"
   ],
+  "engines": {
+    "node": "^14.0.0",
+    "yarn": "^1.0.0"
+  },
   "dependencies": {},
   "devDependencies": {
     "ava": "3.13.0",
